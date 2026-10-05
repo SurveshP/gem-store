@@ -1,0 +1,198 @@
+/* ============ FLOATING LABEL (Shared) ============ */
+.gem-float-group {
+  position: relative;
+  width: 100%;
+}
+
+.gem-float-input,
+.gem-float-select {
+  width: 100%;
+  background-color: #0a0a0b;
+  color: #f4f4f5;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  border-radius: 0.75rem;
+  padding: 1.4rem 1rem 0.5rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.gem-float-input:focus,
+.gem-float-select:focus {
+  border-color: #facc15;
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18);
+}
+
+.gem-float-input::placeholder {
+  color: transparent;
+}
+
+.gem-float-label {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #71717a;
+  font-size: 0.95rem;
+  pointer-events: none;
+  transition: all 0.18s ease;
+  background: transparent;
+  padding: 0 4px;
+}
+
+/* Input focus OR filled — label upar chala jaata hai */
+.gem-float-input:focus ~ .gem-float-label,
+.gem-float-input:not(:placeholder-shown) ~ .gem-float-label,
+.gem-float-select:focus ~ .gem-float-label,
+.gem-float-select.has-value ~ .gem-float-label {
+  top: 0.55rem;
+  transform: translateY(0);
+  font-size: 0.72rem;
+  color: #facc15;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Select ka arrow */
+.gem-float-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid #a1a1aa;
+  border-bottom: 2px solid #a1a1aa;
+  pointer-events: none;
+  transition: transform 0.2s;
+}
+
+.gem-float-select-wrap:focus-within::after {
+  border-color: #facc15;
+  transform: translateY(-30%) rotate(225deg);
+}
+
+.gem-datepicker-wrap .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.gem-datepicker-wrap .gem-float-label-up,
+.gem-datepicker-wrap .react-datepicker__input-container input:focus ~ .gem-float-label {
+  top: 0.55rem !important;
+  transform: translateY(0) !important;
+  font-size: 0.72rem !important;
+  color: #facc15 !important;
+  font-weight: 500;
+}
+
+/* Calendar theme */
+.gem-datepicker-calendar {
+  background-color: #18181b !important;
+  border: 1px solid rgba(250, 204, 21, 0.3) !important;
+  border-radius: 0.75rem !important;
+  color: #f4f4f5 !important;
+  font-family: inherit !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
+}
+
+.gem-datepicker-calendar .react-datepicker__header {
+  background-color: #0f0f12 !important;
+  border-bottom: 1px solid rgba(250, 204, 21, 0.2) !important;
+  border-top-left-radius: 0.75rem !important;
+  border-top-right-radius: 0.75rem !important;
+}
+
+.gem-datepicker-calendar .react-datepicker__current-month,
+.gem-datepicker-calendar .react-datepicker-time__header {
+  color: #facc15 !important;
+  font-weight: 600 !important;
+}
+
+.gem-datepicker-calendar .react-datepicker__day-name {
+  color: #a1a1aa !important;
+}
+
+.gem-datepicker-calendar .react-datepicker__day {
+  color: #e4e4e7 !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.15s ease;
+}
+
+.gem-datepicker-calendar .react-datepicker__day:hover {
+  background-color: rgba(250, 204, 21, 0.15) !important;
+  color: #facc15 !important;
+}
+
+.gem-datepicker-calendar .react-datepicker__day--selected,
+.gem-datepicker-calendar .react-datepicker__day--keyboard-selected {
+  background-color: #facc15 !important;
+  color: #000 !important;
+  font-weight: 700;
+}
+
+.gem-datepicker-calendar .react-datepicker__day--outside-month {
+  color: #52525b !important;
+}
+
+.gem-datepicker-calendar .react-datepicker__navigation-icon::before {
+  border-color: #facc15 !important;
+}
+
+.gem-datepicker-calendar .react-datepicker__triangle {
+  display: none !important;
+}
+
+.gem-file-upload {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.gem-file-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px dashed rgba(250, 204, 21, 0.5);
+  background: #0a0a0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #71717a;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.gem-file-upload:hover .gem-file-circle {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.05);
+  color: #facc15;
+}
+
+.gem-file-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gem-file-text {
+  font-size: 0.8rem;
+}
+
+.gem-file-label {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #facc15;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .gem-file-circle {
+    width: 120px;
+    height: 120px;
+    font-size: 0.95rem;
+  }
+}
