@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import CardSection from '../Home/CardSection'
 import DynamicForm from '../../Components/Form/DynamicForm'
 import Button from '../../Components/Bottons/Button'
@@ -6,33 +6,204 @@ import BreadcrumbNav from '../../Layouts/Header/BreadcrumbNav'
 import DynamicTable from '../../Components/Tables/DynamicTable'
 import CustomerDetailsPopup from './CustomerDetailsPopup'
 import { FaEdit, FaTrash, FaMoneyCheckAlt } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+
+const API_BASE = 'http://localhost:5000/api/customers'
 
 const CustomerDetails = () => {
   const [formValues, setFormValues] = useState({})
+  const [customers, setCustomers] = useState([])
+  const [loading, setLoading] = useState(false)
   const [isCustomerPopupOpen, setIsCustomerPopupOpen] = useState(false)
   const [isCreditPopupOpen, setIsCreditPopupOpen] = useState(false)
   const [popupTitle, setPopupTitle] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState(null)
 
+  // ================= FETCH CUSTOMERS =================
+  const fetchCustomers = useCallback(async (searchText = '') => {
+    setLoading(true)
+    // const toastId = toast.loading('Loading customers...')
+
+    try {
+      const url = searchText.trim()
+        ? `${API_BASE}/search/data?search=${encodeURIComponent(searchText.trim())}`
+        : API_BASE
+
+      const res = await fetch(url)
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to fetch customers')
+      }
+
+      setCustomers(data.data || [])
+      // toast.update(toastId, {
+      //   // render: `${data.data?.length || 0} customers loaded`,
+      //   type: 'success',
+      //   isLoading: false,
+      //   autoClose: 2000,
+      // })
+    } catch (err) {
+      console.error(err)
+      toast.update(toastId, {
+        render: err.message || 'Failed to fetch customers',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // First load pe fetch
+  useEffect(() => {
+    fetchCustomers()
+  }, [fetchCustomers])
+
+  // ================= HANDLERS =================
   const onChange = (key, value) => {
     setFormValues((prev) => ({ ...prev, [key]: value }))
   }
 
+  const handleSearch = () => {
+    fetchCustomers(formValues.search || '')
+  }
+
+  const handleClearSearch = () => {
+    setFormValues((prev) => ({ ...prev, search: '' }))
+    fetchCustomers('')
+  }
+
+  const handleAddNew = () => {
+    setSelectedCustomer(null)
+    setPopupTitle('Add New Customer')
+    setIsCustomerPopupOpen(true)
+  }
+
+  const handleEdit = (row) => {
+    setSelectedCustomer(row)
+    setPopupTitle('Edit Customer')
+    setIsCustomerPopupOpen(true)
+  }
+
+  const handleDelete = async (row) => {
+    const confirmed = window.confirm(`Delete ${row.customerName}?`)
+    if (!confirmed) return
+
+    const toastId = toast.loading('Deleting customer...')
+
+    try {
+      const res = await fetch(`${API_BASE}/delete/${row.id}`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Delete failed')
+      }
+
+      toast.update(toastId, {
+        render: 'Customer deleted successfully',
+        type: 'success',
+        isLoading: false,
+        autoClose: 2500,
+      })
+
+      // Refresh list
+      fetchCustomers(formValues.search || '')
+    } catch (err) {
+      console.error(err)
+      toast.update(toastId, {
+        render: err.message || 'Delete failed',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      })
+    }
+  }
+
+  const handlePopupClose = (refresh = false) => {
+    setIsCustomerPopupOpen(false)
+    setSelectedCustomer(null)
+
+    if (refresh) {
+      // Popup ke save hone ke baad list refresh
+      fetchCustomers(formValues.search || '')
+    }
+  }
+
+  // ================= TABLE CONFIG =================
   const fields = [
     {
       key: 'search',
       label: 'Search Customer',
       type: 'text',
-      placeholder: 'Enter name, mobile or city...',
+      placeholder: 'Enter name, mobile, account no, PAN...',
       className: 'col-12',
     },
   ]
 
   const columns = [
+    {
+      header: 'Photo',
+      render: (row) =>
+        row.photo ? (
+          <img
+            src={`http://localhost:5000${row.photo}`}
+            alt={row.customerName}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid rgba(250, 204, 21, 0.4)',
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: '50%',
+              background: 'rgba(250, 204, 21, 0.1)',
+              border: '2px solid rgba(250, 204, 21, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#facc15',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+            }}
+          >
+            {row.customerName?.charAt(0)?.toUpperCase() || '?'}
+          </div>
+        ),
+    },
     { header: 'ID', accessor: 'id' },
-    { header: 'Name', accessor: 'name' },
-    { header: 'Mobile', accessor: 'mobile' },
-    { header: 'City', accessor: 'city' },
+    { header: 'Name', accessor: 'customerName' },
+    { header: 'Account No', accessor: 'accountNo' },
+    { header: 'Mobile', accessor: 'mobileNo' },
+    { header: 'Address', accessor: 'address' },
+    { header: 'PAN', accessor: 'pan' },
+    {
+      header: 'Status',
+      render: (row) => (
+        <span
+          className="badge rounded-pill px-2 py-1"
+          style={{
+            background:
+              row.activeStatus === 1
+                ? 'rgba(34, 197, 94, 0.15)'
+                : 'rgba(239, 68, 68, 0.15)',
+            color: row.activeStatus === 1 ? '#22c55e' : '#ef4444',
+            fontSize: '0.75rem',
+          }}
+        >
+          {row.activeStatus === 1 ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
     {
       header: 'Action',
       render: (row) => (
@@ -43,11 +214,7 @@ const CustomerDetails = () => {
             style={{ color: '#facc15', cursor: 'pointer', transition: 'transform 0.15s' }}
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            onClick={() => {
-              setSelectedCustomer(row)
-              setPopupTitle('Edit Customer')
-              setIsCustomerPopupOpen(true)
-            }}
+            onClick={() => handleEdit(row)}
           />
 
           <FaMoneyCheckAlt
@@ -69,23 +236,14 @@ const CustomerDetails = () => {
             style={{ color: '#ef4444', cursor: 'pointer', transition: 'transform 0.15s' }}
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            onClick={() => {
-              if (window.confirm(`Delete ${row.name}?`)) {
-                alert('Delete logic here')
-              }
-            }}
+            onClick={() => handleDelete(row)}
           />
         </div>
       ),
     },
   ]
 
-  const customers = [
-    { id: 1, name: 'Rahul Sharma', mobile: '9876543210', city: 'Bhopal' },
-    { id: 2, name: 'Priya Verma', mobile: '9876543200', city: 'Indore' },
-    { id: 3, name: 'Amit Jain', mobile: '9876543299', city: 'Delhi' },
-  ]
-
+  // ================= UI =================
   return (
     <>
       <BreadcrumbNav />
@@ -115,8 +273,14 @@ const CustomerDetails = () => {
             </div>
           </div>
 
-          <span className="badge rounded-pill px-3 py-2"
-            style={{ background: 'rgba(250, 204, 21, 0.12)', color: '#facc15', fontSize: '0.8rem' }}>
+          <span
+            className="badge rounded-pill px-3 py-2"
+            style={{
+              background: 'rgba(250, 204, 21, 0.12)',
+              color: '#facc15',
+              fontSize: '0.8rem',
+            }}
+          >
             {customers.length} Records
           </span>
         </div>
@@ -140,21 +304,34 @@ const CustomerDetails = () => {
             </div>
 
             <div className="col-6 col-md-2">
-              <Button text="Search" className="w-100" />
+              <Button text="Search" className="w-100" onClick={handleSearch} />
             </div>
 
             <div className="col-6 col-md-2">
               <Button
                 text="+ New Record"
                 className="w-100"
-                onClick={() => {
-                  setSelectedCustomer(null)
-                  setPopupTitle('Add New Customer')
-                  setIsCustomerPopupOpen(true)
-                }}
+                onClick={handleAddNew}
               />
             </div>
           </div>
+
+          {formValues.search && (
+            <div className="mt-3">
+              <span
+                role="button"
+                onClick={handleClearSearch}
+                style={{
+                  fontSize: '0.8rem',
+                  color: '#facc15',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+              >
+                Clear search
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ============ TABLE ============ */}
@@ -166,18 +343,35 @@ const CustomerDetails = () => {
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
           }}
         >
-          <DynamicTable columns={columns} data={customers} />
+          {loading ? (
+            <div className="text-center py-5 text-warning">
+              <div className="spinner-border text-warning mb-2" role="status" />
+              {/* <div style={{ fontSize: '0.85rem' }}>Loading customers...</div> */}
+            </div>
+          ) : customers.length === 0 ? (
+            <div className="text-center py-5">
+              <div style={{ fontSize: '2.5rem' }}>💎</div>
+              <div className="text-secondary mt-2">No customers found</div>
+              <div
+                style={{ fontSize: '0.8rem', color: '#71717a' }}
+                className="mt-1"
+              >
+                Click <span className="text-warning">+ New Record</span> to add one
+              </div>
+            </div>
+          ) : (
+            <DynamicTable columns={columns} data={customers} />
+          )}
         </div>
 
         {/* ============ POPUPS ============ */}
         <CustomerDetailsPopup
           isOpen={isCustomerPopupOpen}
-          onClose={() => setIsCustomerPopupOpen(false)}
+          onClose={handlePopupClose}
           title={popupTitle}
           initialValues={selectedCustomer || {}}
         />
 
-        {/* Credit popup — baad mein implement kar sakte hain */}
         {isCreditPopupOpen && (
           <CustomerDetailsPopup
             isOpen={isCreditPopupOpen}

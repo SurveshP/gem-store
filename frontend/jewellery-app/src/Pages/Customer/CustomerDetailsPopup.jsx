@@ -3,6 +3,9 @@ import DynamicPopup from '../../Components/Popup/DynamicPopup'
 import DynamicForm from '../../Components/Form/DynamicForm'
 import Button from '../../Components/Bottons/Button'
 
+// 🔔 Toastify
+import { toast } from 'react-toastify'
+
 const CustomerDetailsPopup = ({ isOpen, onClose, title, initialValues = {} }) => {
   const [formValues, setFormValues] = useState({})
 
@@ -13,14 +16,14 @@ const CustomerDetailsPopup = ({ isOpen, onClose, title, initialValues = {} }) =>
   }, [isOpen, initialValues])
 
   const fields = [
-    { key: 'photo',        label: 'Customer Photo',  type: 'file', className: 'col-12' },
+    { key: 'photo', label: 'Customer Photo', type: 'file', className: 'col-12' },
     { key: 'customerName', label: 'Customer Name *', type: 'text', className: 'col-12 col-md-6' },
-    { key: 'accountNo',    label: 'Account No. *',   type: 'text', className: 'col-12 col-md-6' },
-    { key: 'address',      label: 'Address *',       type: 'text', className: 'col-12' },
-    { key: 'mobileNo',     label: 'Mobile Number *', type: 'text', className: 'col-12 col-md-6' },
-    { key: 'pan',          label: 'PAN *',           type: 'text', className: 'col-12 col-md-6' },
-    { key: 'aadharNo',     label: 'Aadhar No *',     type: 'text', className: 'col-12 col-md-6' },
-    { key: 'referredBy',   label: 'Referred By *',   type: 'text', className: 'col-12 col-md-6' },
+    { key: 'accountNo', label: 'Account No. *', type: 'text', className: 'col-12 col-md-6' },
+    { key: 'address', label: 'Address *', type: 'text', className: 'col-12' },
+    { key: 'mobileNo', label: 'Mobile Number *', type: 'text', className: 'col-12 col-md-6' },
+    { key: 'pan', label: 'PAN *', type: 'text', className: 'col-12 col-md-6' },
+    { key: 'aadharNo', label: 'Aadhar No *', type: 'text', className: 'col-12 col-md-6' },
+    { key: 'referredBy', label: 'Referred By *', type: 'text', className: 'col-12 col-md-6' },
   ]
 
   const onChange = (key, value) => {
@@ -28,47 +31,74 @@ const CustomerDetailsPopup = ({ isOpen, onClose, title, initialValues = {} }) =>
   }
 
   const handleSave = async () => {
-    try {
-      const formData = new FormData()
+    // 🔒 Basic frontend validation
+    if (!formValues.customerName?.trim()) {
+      toast.error('Customer Name is required')
+      return
+    }
 
-      // Sirf wahi fields daalo jo backend chahta hai
-      const textFields = [
-        'customerName', 'accountNo', 'address',
-        'mobileNo', 'pan', 'aadharNo', 'referredBy',
-      ]
-      textFields.forEach((key) => {
-        formData.append(key, formValues[key] ?? '')
-      })
+    const isEdit = !!initialValues?.id
 
-      // File attach karo
-      if (formValues.photo instanceof File) {
-        formData.append('photo', formValues.photo)
+    // Edit mode mein photo mandatory nahi
+    if (!isEdit && !formValues.photo) {
+      toast.error('Customer Photo is required')
+      return
+    }
+
+    const formData = new FormData()
+
+    Object.keys(formValues).forEach((key) => {
+      if (key === 'photo') {
+        // Sirf tab append karo jab nayi File ho
+        if (formValues[key] instanceof File) {
+          formData.append('photo', formValues[key])
+        }
+      } else {
+        formData.append(key, formValues[key])
       }
+    })
 
-      // Agar update hai (id hai), to update route
-      const isUpdate = !!initialValues?.id
-      const url = isUpdate
+    const toastId = toast.loading(isEdit ? 'Updating customer...' : 'Saving customer...')
+
+    try {
+      const url = isEdit
         ? `http://localhost:5000/api/customers/update/${initialValues.id}`
-        : `http://localhost:5000/api/customers`
+        : 'http://localhost:5000/api/customers'
 
       const res = await fetch(url, {
         method: 'POST',
-        body: formData,   // ⚠️ Content-Type manually set mat karo
+        body: formData,
       })
 
       const data = await res.json()
 
-      if (!res.ok) {
-        console.error('Save failed:', data)
-        alert(data.message || 'Save failed')
+      if (!res.ok || !data.success) {
+        toast.update(toastId, {
+          render: data.message || 'Operation failed',
+          type: 'error',
+          isLoading: false,
+          autoClose: 3000,
+        })
         return
       }
 
-      console.log('Saved:', data)
-      onClose?.()
+      toast.update(toastId, {
+        render: isEdit ? 'Customer updated successfully' : 'Customer created successfully',
+        type: 'success',
+        isLoading: false,
+        autoClose: 2500,
+      })
+
+      // Parent ko batao ki refresh karo
+      onClose?.(true)
     } catch (err) {
-      console.error('Error:', err)
-      alert('Something went wrong')
+      console.error(err)
+      toast.update(toastId, {
+        render: 'Network error. Please try again.',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      })
     }
   }
 
@@ -111,6 +141,23 @@ const CustomerDetailsPopup = ({ isOpen, onClose, title, initialValues = {} }) =>
         }
         .gem-popup-form input[type="file"]::file-selector-button:hover {
           background: rgba(250, 204, 21, 0.25);
+        }
+
+        /* 🔔 Toastify dark theme customization */
+        .Toastify__toast {
+          background: #18181b !important;
+          color: #f4f4f5 !important;
+          border: 1px solid rgba(250, 204, 21, 0.25);
+          border-radius: 0.5rem;
+        }
+        .Toastify__toast--success {
+          border-color: rgba(34, 197, 94, 0.5);
+        }
+        .Toastify__toast--error {
+          border-color: rgba(239, 68, 68, 0.5);
+        }
+        .Toastify__progress-bar {
+          background: #facc15;
         }
       `}</style>
 
