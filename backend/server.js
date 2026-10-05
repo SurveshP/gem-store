@@ -3,7 +3,10 @@ import cors from "cors";
 import path from "path";
 
 import { createCustomerTable } from "./models/customerModel.js";
+import { createItemTable } from "./models/itemModel.js"; 
+
 import customerRoutes from "./routes/customerRoutes.js";
+import itemRoutes from "./routes/itemRoutes.js";  
 
 const app = express();
 
@@ -15,9 +18,11 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // CREATE TABLE
 createCustomerTable();
+createItemTable();    
 
 // ROUTES
 app.use("/api/customers", customerRoutes);
+app.use("/api/items", itemRoutes); 
 
 app.get("/", (req, res) => {
     res.send("Jewellery Backend Running");
