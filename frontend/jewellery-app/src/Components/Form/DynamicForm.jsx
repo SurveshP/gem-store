@@ -39,13 +39,28 @@ const DynamicForm = ({ fields, formValues, onChange }) => {
         )
 
       case 'file':
+        // Determine preview source
+        const fileValue = formValues[field.key]
+
+        let previewSrc = null
+
+        if (fileValue instanceof File) {
+          // Nayi image select ki gayi hai
+          previewSrc = URL.createObjectURL(fileValue)
+        } else if (typeof fileValue === 'string' && fileValue.trim() !== '') {
+          // Existing image (backend se aayi URL)
+          previewSrc = fileValue.startsWith('http')
+            ? fileValue
+            : `http://localhost:5000${fileValue}`
+        }
+
         return (
           <div className="d-flex flex-column align-items-center mb-2">
             <label className="gem-file-upload">
               <div className="gem-file-circle">
-                {formValues[field.key] ? (
+                {previewSrc ? (
                   <img
-                    src={URL.createObjectURL(formValues[field.key])}
+                    src={previewSrc}
                     alt="Upload preview"
                     className="gem-file-preview"
                   />

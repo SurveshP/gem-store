@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-// Customer fields (photo bhi include)
+// Customer fields (Mongo schema jaisa)
 const customerFields = [
     "customerName",
     "accountNo",
@@ -9,9 +9,10 @@ const customerFields = [
     "pan",
     "aadharNo",
     "referredBy",
-    "photo",         // ← naya field
+    "photo",
 ];
 
+// Table schema
 const createCustomerTable = () => {
     const query = `
         CREATE TABLE IF NOT EXISTS customers (
@@ -23,7 +24,7 @@ const createCustomerTable = () => {
             pan VARCHAR(20),
             aadharNo VARCHAR(20),
             referredBy VARCHAR(255),
-            photo VARCHAR(500),         -- ← file path store hoga
+            photo VARCHAR(500),
             activeStatus TINYINT(1) DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )

@@ -5,6 +5,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Dashboard from './Pages/Home/Dashboard'
 import CustomerDetails from './Pages/Customer/CustomerDetails'
 
+// 🔔 Toastify
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -32,6 +36,18 @@ const App = () => {
         >
           © {new Date().getFullYear()} GemStore — All rights reserved.
         </footer>
+
+        {/* 🔔 Toast Container */}
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+          theme="dark"
+        />
       </div>
     </BrowserRouter>
   )
