@@ -8,6 +8,7 @@ import CustomerDetails from './Pages/Customer/CustomerDetails'
 // 🔔 Toastify
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import ItemsDetails from './Pages/Items/ItemsDetails'
 
 const App = () => {
   return (
@@ -23,6 +24,8 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/customerDetails" element={<CustomerDetails />} />
+
+            <Route path="/itemPage" element={<ItemsDetails />} />
           </Routes>
         </main>
 
