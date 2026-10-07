@@ -218,7 +218,7 @@ const ItemsDetails = () => {
           </span>
         </div>
 
-        {/* SEARCH + ACTIONS */}
+        {/* SEARCH SECTION */}
         <div
           className="rounded-3 p-3 p-sm-4 mb-4"
           style={{

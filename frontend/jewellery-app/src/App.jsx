@@ -9,6 +9,7 @@ import CustomerDetails from './Pages/Customer/CustomerDetails'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ItemsDetails from './Pages/Items/ItemsDetails'
+import StockInDetails from './Pages/Stock/StockInDetails'
 
 const App = () => {
   return (
@@ -26,6 +27,8 @@ const App = () => {
             <Route path="/customerDetails" element={<CustomerDetails />} />
 
             <Route path="/itemPage" element={<ItemsDetails />} />
+
+            <Route path="/stockInDetails" element={<StockInDetails />} />
           </Routes>
         </main>
 

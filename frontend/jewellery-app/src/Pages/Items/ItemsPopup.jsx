@@ -86,7 +86,7 @@ const ItemsPopup = ({ isOpen, onClose, title, initialValues = {} }) => {
   }
 
   return (
-    <DynamicPopup isOpen={isOpen} onClose={onClose} title={title}>
+    <DynamicPopup isOpen={isOpen} onClose={onClose} title={title} onSave={handleSave}>
       <style>{`
         .gem-popup-form .form-label {
           color: #d4d4d8;
@@ -129,9 +129,9 @@ const ItemsPopup = ({ isOpen, onClose, title, initialValues = {} }) => {
           }}
         ></div>
 
-        <div className="d-flex justify-content-center gap-3 flex-wrap">
+        {/* <div className="d-flex justify-content-center gap-3 flex-wrap">
           <Button text="Save Item" onClick={handleSave} />
-        </div>
+        </div> */}
       </div>
     </DynamicPopup>
   )
