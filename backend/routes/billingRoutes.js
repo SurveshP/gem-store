@@ -6,6 +6,7 @@ import {
     getBillingById,
     deleteBilling,
     searchBillings,
+    getAllEstimates,
 } from "../controllers/billingController.js";
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.post("/create", insertBilling);
 
 // GET SINGLE
 router.get("/:id", getBillingById);
+
+// GET ALL ESTIMATE
+router.get("/estimates/all", getAllEstimates); 
 
 // DELETE
 router.delete("/:id", deleteBilling);

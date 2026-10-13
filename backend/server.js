@@ -6,14 +6,15 @@ import { createCustomerTable } from "./models/customerModel.js";
 import { createItemTable } from "./models/itemModel.js";
 import { createStockTable } from "./models/stockModel.js";
 import { createStockGroupTable } from "./models/stockGroupModel.js";
-import { createItemsBillingTable } from "./models/itemsBillingModel.js";  // 👈 NAYA
-import { createBillingTable } from "./models/billingModel.js";            // 👈 NAYA
+import { createItemsBillingTable } from "./models/itemsBillingModel.js";  
+import { createBillingTable } from "./models/billingModel.js";
+import { createEstimateTable } from "./models/estimateModel.js";             
 
 import customerRoutes from "./routes/customerRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
-import itemsBillingRoutes from "./routes/itemsBillingRoutes.js";          // 👈 NAYA
-import billingRoutes from "./routes/billingRoutes.js";                    // 👈 NAYA
+import itemsBillingRoutes from "./routes/itemsBillingRoutes.js";          
+import billingRoutes from "./routes/billingRoutes.js";                    
 
 const app = express();
 
@@ -27,15 +28,16 @@ createCustomerTable();
 createItemTable();
 createStockTable();
 createStockGroupTable();
-createItemsBillingTable();   // 👈 NAYA
-createBillingTable();        // 👈 NAYA
+createItemsBillingTable();   
+createBillingTable();
+createEstimateTable();   
 
 // ROUTES
 app.use("/api/customers", customerRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/stock", stockRoutes);
-app.use("/api/itemsBilling", itemsBillingRoutes);   // 👈 NAYA
-app.use("/api/billing", billingRoutes);             // 👈 NAYA
+app.use("/api/itemsBilling", itemsBillingRoutes);   
+app.use("/api/billing", billingRoutes);             
 
 app.get("/", (req, res) => {
     res.send("Jewellery Backend Running");
