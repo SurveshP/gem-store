@@ -24,7 +24,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
     const day = String(today.getDate()).padStart(2, '0')
     const month = String(today.getMonth() + 1).padStart(2, '0')
     const year = today.getFullYear()
-    return `${day}-${month}-${year}`
+  return `${year}-${month}-${day}`
   }
 
   // =========================
@@ -180,6 +180,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
         ...prev,
         customerName: value,
         address: customer?.address || '',
+        accountNo: customer?.accountNo || '',
         mobile: customer?.mobileNo || '',
       }))
     } else if (key === 'itemName') {
@@ -286,6 +287,12 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
     {
       key: 'address',
       label: 'Address',
+      type: 'text',
+      className: 'col-12 col-md-12',
+    },
+    {
+      key: 'accountNo',
+      label: 'Account No',
       type: 'text',
       className: 'col-12 col-md-6',
     },
