@@ -18,7 +18,8 @@ const billingFields = [
     "online",
     "oldGold",
     "roundAmount",
-    "additionAll",              // 👈 NAYA
+    "additionAll",
+    "paid",
     "balance",
     "dueDate",
     "remarks",
@@ -46,6 +47,7 @@ const createBillingTable = () => {
             oldGold DECIMAL(10, 2) DEFAULT 0,
             roundAmount DECIMAL(10, 2) DEFAULT 0,
             additionAll DECIMAL(10, 2) DEFAULT 0,
+            paid DECIMAL(10, 2) DEFAULT 0,
             balance DECIMAL(10, 2) DEFAULT 0,
             dueDate VARCHAR(20),
             remarks TEXT,
