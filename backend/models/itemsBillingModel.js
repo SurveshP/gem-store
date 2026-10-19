@@ -2,7 +2,7 @@ import db from "../config/db.js";
 
 // Items Billing fields
 const itemsBillingFields = [
-    "billingId",          // 👈 link to billing table (NULL jab tak save na ho)
+    "billingId",
     "billType",
     "billNo",
     "billDate",

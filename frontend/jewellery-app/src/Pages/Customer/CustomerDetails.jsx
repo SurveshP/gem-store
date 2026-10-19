@@ -5,6 +5,7 @@ import Button from '../../Components/Bottons/Button'
 import BreadcrumbNav from '../../Layouts/Header/BreadcrumbNav'
 import DynamicTable from '../../Components/Tables/DynamicTable'
 import CustomerDetailsPopup from './CustomerDetailsPopup'
+import CreditSalePopup from './CreditSalePopup'           // 👈 NAYA
 import { FaEdit, FaTrash, FaMoneyCheckAlt } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 
@@ -15,14 +16,14 @@ const CustomerDetails = () => {
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(false)
   const [isCustomerPopupOpen, setIsCustomerPopupOpen] = useState(false)
-  const [isCreditPopupOpen, setIsCreditPopupOpen] = useState(false)
+  const [isCreditPopupOpen, setIsCreditPopupOpen] = useState(false)       // 👈 Credit popup
   const [popupTitle, setPopupTitle] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState(null)
 
   // ================= FETCH CUSTOMERS =================
   const fetchCustomers = useCallback(async (searchText = '') => {
     setLoading(true)
-    // const toastId = toast.loading('Loading customers...')
+    const toastId = toast.loading('Loading customers...')
 
     try {
       const url = searchText.trim()
@@ -37,12 +38,13 @@ const CustomerDetails = () => {
       }
 
       setCustomers(data.data || [])
-      // toast.update(toastId, {
-      //   // render: `${data.data?.length || 0} customers loaded`,
-      //   type: 'success',
-      //   isLoading: false,
-      //   autoClose: 2000,
-      // })
+
+      toast.update(toastId, {
+        render: `${data.data?.length || 0} customers loaded`,
+        type: 'success',
+        isLoading: false,
+        autoClose: 2000,
+      })
     } catch (err) {
       console.error(err)
       toast.update(toastId, {
@@ -56,7 +58,6 @@ const CustomerDetails = () => {
     }
   }, [])
 
-  // First load pe fetch
   useEffect(() => {
     fetchCustomers()
   }, [fetchCustomers])
@@ -87,6 +88,13 @@ const CustomerDetails = () => {
     setIsCustomerPopupOpen(true)
   }
 
+  // ✅ Credit Sale — CustomerDetailsPopup ki jagah CreditSalePopup khulega
+  const handleCreditSale = (row) => {
+    setSelectedCustomer(row)
+    setPopupTitle(`Credit Sale — ${row.customerName}`)
+    setIsCreditPopupOpen(true)
+  }
+
   const handleDelete = async (row) => {
     const confirmed = window.confirm(`Delete ${row.customerName}?`)
     if (!confirmed) return
@@ -110,7 +118,6 @@ const CustomerDetails = () => {
         autoClose: 2500,
       })
 
-      // Refresh list
       fetchCustomers(formValues.search || '')
     } catch (err) {
       console.error(err)
@@ -127,8 +134,16 @@ const CustomerDetails = () => {
     setIsCustomerPopupOpen(false)
     setSelectedCustomer(null)
 
-    if (refresh) {
-      // Popup ke save hone ke baad list refresh
+    if (refresh === true) {
+      fetchCustomers(formValues.search || '')
+    }
+  }
+
+  const handleCreditPopupClose = (refresh = false) => {
+    setIsCreditPopupOpen(false)
+    setSelectedCustomer(null)
+
+    if (refresh === true) {
       fetchCustomers(formValues.search || '')
     }
   }
@@ -223,11 +238,7 @@ const CustomerDetails = () => {
             style={{ color: '#fb923c', cursor: 'pointer', transition: 'transform 0.15s' }}
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            onClick={() => {
-              setSelectedCustomer(row)
-              setPopupTitle('Credit Sale')
-              setIsCreditPopupOpen(true)
-            }}
+            onClick={() => handleCreditSale(row)}
           />
 
           <FaTrash
@@ -247,12 +258,10 @@ const CustomerDetails = () => {
   return (
     <>
       <BreadcrumbNav />
-
       <CardSection />
 
       <div className="container-fluid px-3 px-sm-4 px-lg-5 py-4">
-
-        {/* ============ PAGE HEADER ============ */}
+        {/* PAGE HEADER */}
         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
           <div className="d-flex align-items-center">
             <span
@@ -285,7 +294,7 @@ const CustomerDetails = () => {
           </span>
         </div>
 
-        {/* ============ SEARCH + ACTIONS PANEL ============ */}
+        {/* SEARCH + ACTIONS PANEL */}
         <div
           className="rounded-3 p-3 p-sm-4 mb-4"
           style={{
@@ -334,7 +343,7 @@ const CustomerDetails = () => {
           )}
         </div>
 
-        {/* ============ TABLE ============ */}
+        {/* TABLE */}
         <div
           className="rounded-3 overflow-hidden"
           style={{
@@ -344,9 +353,8 @@ const CustomerDetails = () => {
           }}
         >
           {loading ? (
-            <div className="text-center py-5 text-warning">
+            <div className="text-center py-5">
               <div className="spinner-border text-warning mb-2" role="status" />
-              {/* <div style={{ fontSize: '0.85rem' }}>Loading customers...</div> */}
             </div>
           ) : customers.length === 0 ? (
             <div className="text-center py-5">
@@ -364,7 +372,7 @@ const CustomerDetails = () => {
           )}
         </div>
 
-        {/* ============ POPUPS ============ */}
+        {/* ============ CUSTOMER ADD/EDIT POPUP ============ */}
         <CustomerDetailsPopup
           isOpen={isCustomerPopupOpen}
           onClose={handlePopupClose}
@@ -372,14 +380,15 @@ const CustomerDetails = () => {
           initialValues={selectedCustomer || {}}
         />
 
-        {isCreditPopupOpen && (
-          <CustomerDetailsPopup
-            isOpen={isCreditPopupOpen}
-            onClose={() => setIsCreditPopupOpen(false)}
-            title={popupTitle}
-            initialValues={selectedCustomer || {}}
-          />
-        )}
+        {/* ============ CREDIT SALE POPUP ============ */}
+        <CreditSalePopup
+          isOpen={isCreditPopupOpen}
+          onClose={handleCreditPopupClose}
+          title={popupTitle}
+          customerName={selectedCustomer?.customerName || ''}
+          accountNo={selectedCustomer?.accountNo || ''}  
+          mobile={selectedCustomer?.mobileNo || ''}
+        />
       </div>
     </>
   )
