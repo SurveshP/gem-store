@@ -28,7 +28,7 @@ const BillPrint = () => {
             setLoading(true);
             setError(null);
 
-            // ✅ Fetch Billing
+            //Fetch Billing
             const billingUrl = `http://localhost:5000/api/billing/${billId}`;
             const response = await fetch(billingUrl);
             if (!response.ok) {
@@ -40,7 +40,7 @@ const BillPrint = () => {
 
             const bill = data.data;
 
-            // ✅ Fetch Items by billNo
+            //Fetch Items by billNo
             const itemsUrl = `http://localhost:5000/api/itemsBilling/by-bill/${encodeURIComponent(bill.billNo)}`;
             const itemsResponse = await fetch(itemsUrl);
             const itemsJson = await itemsResponse.json();

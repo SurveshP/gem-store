@@ -125,7 +125,7 @@ export const insertCreditSale = (req, res) => {
 
         const creditSaleId = result.insertId;
 
-        // ✅ Ab CreditList update karo
+        //Ab CreditList update karo
         updateCreditList(body, (clErr, clResult) => {
             if (clErr) {
                 console.log("CreditList update failed:", clErr);
@@ -184,7 +184,7 @@ const updateCreditList = (saleBody, callback) => {
         const addOldGold = parseFloat(oldGold) || 0;
         const addBalance = parseFloat(finalBalance) || 0;
 
-        // ✅ PURANI value + NAYI value (PLUS)
+        //PURANI value + NAYI value (PLUS)
         const newFinalAmount =
             (parseFloat(creditList.finalAmount) || 0) + addFinalAmount;
         const newCash = (parseFloat(creditList.cash) || 0) + addCash;
@@ -263,7 +263,7 @@ export const deleteCreditSale = (req, res) => {
                         });
                     }
 
-                    // ✅ CreditList reverse update
+                    //CreditList reverse update
                     reverseCreditList(creditSale, () => {
                         res.status(200).json({
                             success: true,
@@ -313,7 +313,7 @@ const reverseCreditList = (creditSale, callback) => {
         const subOldGold = parseFloat(oldGold) || 0;
         const subBalance = parseFloat(finalBalance) || 0;
 
-        // ✅ PURANI value - NAYI value (MINUS)
+        // PURANI value - NAYI value (MINUS)
         const newFinalAmount =
             (parseFloat(creditList.finalAmount) || 0) - subFinalAmount;
         const newCash = (parseFloat(creditList.cash) || 0) - subCash;
