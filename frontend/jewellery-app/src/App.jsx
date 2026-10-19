@@ -12,6 +12,7 @@ import BillPrint from './Pages/Bill/BillPrint'
 // 🔔 Toastify
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import CreditListDetails from './Pages/CreditList/CreditListDetails'
 
 // 👇 Naya wrapper component (kyunki useLocation Router ke andar hona chahiye)
 const AppContent = () => {
@@ -33,8 +34,13 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/customerDetails" element={<CustomerDetails />} />
+
           <Route path="/itemPage" element={<ItemsDetails />} />
+
           <Route path="/stockInDetails" element={<StockInDetails />} />
+
+          <Route path="/creditList" element={<CreditListDetails />} />
+
           <Route path="/billing" element={<BillingDetails />} />
           <Route path="/billPrint/:id" element={<BillPrint />} />
         </Routes>

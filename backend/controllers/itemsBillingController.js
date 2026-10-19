@@ -64,7 +64,7 @@ export const insertItemsBilling = (req, res) => {
         });
     }
 
-    // ✅ SERVER-SIDE CALCULATION (frontend pe bharosa mat karo)
+    // Server-side calculation
     const amount = parseFloat(body.amount) || 0;
     const weight = parseFloat(body.weight) || 0;
     const percent = parseFloat(body.percent) || 0;
@@ -75,23 +75,20 @@ export const insertItemsBilling = (req, res) => {
     let makingAmount = 0;
 
     if (makingCharge === "Fixed") {
-        // User ne jo manual diya hai wahi use karo
         makingAmount = parseFloat(body.makingAmount) || 0;
     } else if (makingCharge === "%") {
-        // Auto-calculate
         makingAmount = (baseAmount * percent) / 100;
     }
 
     const totalAmount = makingAmount + baseAmount;
 
-    // Override body with calculated values
     const finalBody = {
         ...body,
         makingAmount: makingAmount.toFixed(2),
         totalAmount: totalAmount.toFixed(2),
     };
 
-    const values = pickItemsBillingFields(finalBody);
+    const values = itemsBillingFields.map((field) => finalBody[field] ?? null);
 
     const query = `
         INSERT INTO items_billing
@@ -110,6 +107,7 @@ export const insertItemsBilling = (req, res) => {
 
         const itemsBillingId = result.insertId;
 
+        // Stock update (Individual / Group) — jo aapka logic tha
         handleStockUpdate(finalBody, itemsBillingId, (stockResult) => {
             db.query(
                 `SELECT * FROM items_billing WHERE id = ?`,
@@ -129,7 +127,8 @@ export const insertItemsBilling = (req, res) => {
 
                     res.status(201).json({
                         success: true,
-                        message: stockResult.message || "Item added successfully",
+                        message:
+                            stockResult.message || "Item added successfully",
                         data: {
                             ...rows[0],
                             ...stockResult,

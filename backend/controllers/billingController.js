@@ -1,6 +1,7 @@
 import db from "../config/db.js";
 import { billingFields } from "../models/billingModel.js";
 import { estimateFields } from "../models/estimateModel.js";
+import { creditListFields } from "../models/creditListModel.js";
 
 const pickBillingFields = (body) => {
     return billingFields.map((field) => body[field] ?? null);
@@ -8,6 +9,10 @@ const pickBillingFields = (body) => {
 
 const pickEstimateFields = (body) => {
     return estimateFields.map((field) => body[field] ?? null);
+};
+
+const pickCreditListFields = (body) => {
+    return creditListFields.map((field) => body[field] ?? null);
 };
 
 // ==================== CREATE BILLING ====================
@@ -28,15 +33,16 @@ export const insertBilling = (req, res) => {
         });
     }
 
-    const values = pickBillingFields(body);
+    // ============ STEP 1: Billing insert ============
+    const billingValues = pickBillingFields(body);
 
-    const query = `
+    const billingQuery = `
         INSERT INTO billing
         (${billingFields.join(", ")})
         VALUES (${billingFields.map(() => "?").join(", ")})
     `;
 
-    db.query(query, values, (err, result) => {
+    db.query(billingQuery, billingValues, (err, result) => {
         if (err) {
             return res.status(500).json({
                 success: false,
@@ -47,7 +53,7 @@ export const insertBilling = (req, res) => {
 
         const billingId = result.insertId;
 
-        // ✅ Link items_billing rows to this billing
+        // ============ STEP 2: Link items_billing ============
         const linkQuery = `
             UPDATE items_billing
             SET billingId = ?
@@ -59,31 +65,18 @@ export const insertBilling = (req, res) => {
                 console.log("Failed to link items to billing:", linkErr);
             }
 
-            // ✅ Ab estimate table mein insert karo
-            insertEstimate(billingId, body, (estimateResult) => {
-                if (linkErr) {
-                    return res.status(201).json({
+            // ============ STEP 3: Estimate insert ============
+            insertEstimate(billingId, body, () => {
+
+                // ============ STEP 4: Credit List insert ============
+                insertCreditList(billingId, body, () => {
+
+                    // ============ FINAL RESPONSE ============
+                    res.status(201).json({
                         success: true,
-                        message:
-                            "Billing saved, but items link failed",
+                        message: "Billing saved successfully",
                         billingId,
                     });
-                }
-
-                if (!estimateResult.success) {
-                    return res.status(201).json({
-                        success: true,
-                        message:
-                            "Billing saved, but estimate insert failed",
-                        billingId,
-                        estimateError: estimateResult.error,
-                    });
-                }
-
-                res.status(201).json({
-                    success: true,
-                    message: "Billing saved successfully",
-                    billingId,
                 });
             });
         });
@@ -92,59 +85,70 @@ export const insertBilling = (req, res) => {
 
 // ==================== INSERT ESTIMATE ====================
 const insertEstimate = (billingId, billingData, callback) => {
-    // Step 1: items_billing se gold/silver weight ka sum nikaalo
-    const sumQuery = `
-        SELECT
-            SUM(CASE WHEN metalType = 'Gold' THEN weight ELSE 0 END) AS weightGold,
-            SUM(CASE WHEN metalType = 'Silver' THEN weight ELSE 0 END) AS weightSilver
-        FROM items_billing
-        WHERE billingId = ? AND activeStatus = 1
+    const estimateBody = {
+        billingId,
+        billNo: billingData.billNo,
+        billDate: billingData.billDate,
+        customerName: billingData.customerName,
+        accountNo: billingData.accountNo,
+        amount: billingData.finalAmount,
+        pay: billingData.cash,
+        oldGold: billingData.oldGold,
+        textSwapOnline: billingData.online,
+        round: billingData.roundAmount,
+        balance: billingData.balance,
+        dueDate: billingData.dueDate,
+        additionAll: billingData.additionAll,
+        totalFinal: billingData.finalTotal,
+    };
+
+    const estimateValues = pickEstimateFields(estimateBody);
+
+    const insertQuery = `
+        INSERT INTO estimate
+        (${estimateFields.join(", ")})
+        VALUES (${estimateFields.map(() => "?").join(", ")})
     `;
 
-    db.query(sumQuery, [billingId], (sumErr, sumRows) => {
-        if (sumErr) {
-            console.log("Failed to calculate weight sums:", sumErr);
-            return callback({ success: false, error: sumErr });
+    db.query(insertQuery, estimateValues, (insertErr) => {
+        if (insertErr) {
+            console.log("Estimate insert failed:", insertErr);
         }
+        callback();
+    });
+};
 
-        const weightGold = parseFloat(sumRows[0]?.weightGold) || 0;
-        const weightSilver = parseFloat(sumRows[0]?.weightSilver) || 0;
+// ==================== INSERT CREDIT LIST ====================
+const insertCreditList = (billingId, billingData, callback) => {
+    const creditListBody = {
+        billingId,
+        billNo: billingData.billNo,
+        clientName: billingData.customerName,
+        accountNo: billingData.accountNo,
+        billDate: billingData.billDate,
+        finalAmount: billingData.finalAmount,
+        cash: billingData.cash,
+        oldGold: billingData.oldGold,
+        finalBalance: billingData.balance,
+        nextDate: billingData.dueDate,
+        remark: billingData.remarks,
+        mobile: billingData.mobile,
+        referredBy: billingData.referredBy,
+    };
 
-        // Step 2: estimate mein insert karo
-        const estimateBody = {
-            billingId,
-            billNo: billingData.billNo,
-            billDate: billingData.billDate,
-            customerName: billingData.customerName,
-            accountNo: billingData.accountNo,
-            weightGold,
-            weightSilver,
-            cash: billingData.cash,
-            online: billingData.online,
-            balance: billingData.balance,
-        };
+    const creditListValues = pickCreditListFields(creditListBody);
 
-        const estimateValues = pickEstimateFields(estimateBody);
+    const insertQuery = `
+        INSERT INTO credit_list
+        (${creditListFields.join(", ")})
+        VALUES (${creditListFields.map(() => "?").join(", ")})
+    `;
 
-        const insertQuery = `
-            INSERT INTO estimate
-            (${estimateFields.join(", ")})
-            VALUES (${estimateFields.map(() => "?").join(", ")})
-        `;
-
-        db.query(insertQuery, estimateValues, (insertErr, insertResult) => {
-            if (insertErr) {
-                console.log("Estimate insert failed:", insertErr);
-                return callback({ success: false, error: insertErr });
-            }
-
-            callback({
-                success: true,
-                estimateId: insertResult.insertId,
-                weightGold,
-                weightSilver,
-            });
-        });
+    db.query(insertQuery, creditListValues, (insertErr) => {
+        if (insertErr) {
+            console.log("Credit List insert failed:", insertErr);
+        }
+        callback();
     });
 };
 
@@ -236,6 +240,51 @@ export const getAllEstimates = (req, res) => {
     });
 };
 
+// ==================== GET ALL CREDIT LIST ====================
+export const getAllCreditList = (req, res) => {
+    const query = `
+        SELECT * FROM credit_list
+        WHERE activeStatus = 1
+        ORDER BY id DESC
+    `;
+
+    db.query(query, (err, result) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to fetch credit list",
+                error: err,
+            });
+        }
+
+        res.status(200).json({ success: true, data: result });
+    });
+};
+
+// ==================== GET CREDIT LIST BY CUSTOMER ====================
+export const getCreditListByCustomer = (req, res) => {
+    const { customerName = "", mobile = "" } = req.query;
+
+    const query = `
+        SELECT * FROM credit_list
+        WHERE activeStatus = 1
+        AND (clientName = ? OR mobile = ?)
+        ORDER BY id DESC
+    `;
+
+    db.query(query, [customerName, mobile], (err, result) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to fetch credit list",
+                error: err,
+            });
+        }
+
+        res.status(200).json({ success: true, data: result });
+    });
+};
+
 // ==================== DELETE BILLING ====================
 export const deleteBilling = (req, res) => {
     const { id } = req.params;
@@ -256,12 +305,9 @@ export const deleteBilling = (req, res) => {
             });
         }
 
-        // Estimate bhi delete karo (billingId match karke)
-        db.query(
-            `DELETE FROM estimate WHERE billingId = ?`,
-            [id],
-            () => {}
-        );
+        // Estimate + Credit List bhi delete karo
+        db.query(`DELETE FROM estimate WHERE billingId = ?`, [id], () => {});
+        db.query(`DELETE FROM credit_list WHERE billingId = ?`, [id], () => {});
 
         res.status(200).json({
             success: true,

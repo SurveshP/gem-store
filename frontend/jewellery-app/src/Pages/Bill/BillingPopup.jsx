@@ -24,7 +24,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
     const day = String(today.getDate()).padStart(2, '0')
     const month = String(today.getMonth() + 1).padStart(2, '0')
     const year = today.getFullYear()
-  return `${year}-${month}-${day}`
+    return `${year}-${month}-${day}`
   }
 
   // =========================
@@ -43,7 +43,6 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       dueDate: today,
     }))
 
-    // Reset popup states
     setItems([])
     setSavedBillId(null)
     setTagOptions([])
@@ -99,6 +98,28 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
   ])
 
   // =========================
+  // ADDITION ALL = cash + online + oldGold + round
+  // =========================
+  useEffect(() => {
+    const cash = Number(formValues.cash) || 0
+    const online = Number(formValues.online) || 0
+    const oldGold = Number(formValues.oldGold) || 0
+    const roundAmount = Number(formValues.roundAmount) || 0
+
+    const additionAll = cash + online + oldGold + roundAmount
+
+    setFormValues((prev) => ({
+      ...prev,
+      additionAll: additionAll.toFixed(2),
+    }))
+  }, [
+    formValues.cash,
+    formValues.online,
+    formValues.oldGold,
+    formValues.roundAmount,
+  ])
+
+  // =========================
   // AUTO-CALCULATE: makingAmount + totalAmount
   // =========================
   useEffect(() => {
@@ -112,7 +133,6 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
     let makingAmount = 0
 
     if (makingCharge === 'Fixed') {
-      // User ne jo manual daala hai wahi rahe
       makingAmount = Number(formValues.makingAmount) || 0
     } else if (makingCharge === '%') {
       makingAmount = (baseAmount * percent) / 100
@@ -120,8 +140,6 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
 
     const totalAmount = makingAmount + baseAmount
 
-    // Sirf tab update karo jab values actually change hui hon
-    // (warna infinite loop ho jayega)
     if (
       Number(formValues.makingAmount) !== makingAmount ||
       Number(formValues.totalAmount) !== totalAmount
@@ -164,7 +182,11 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
         'http://localhost:5000/api/stock/active/all'
       )
       const data = await response.json()
-      if (response.ok) setItemsMaster(data.data)
+
+      if (response.ok) {
+        console.log('🔍 Stock items loaded:', data.data)
+        setItemsMaster(data.data)
+      }
     } catch (error) {
       console.log('Error fetching items:', error)
     }
@@ -182,8 +204,10 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
         address: customer?.address || '',
         accountNo: customer?.accountNo || '',
         mobile: customer?.mobileNo || '',
+        referredBy: customer?.referredBy || '',
       }))
     } else if (key === 'itemName') {
+      // ✅ Is item ke saare stock rows
       const selectedRows = itemsMaster.filter((i) => i.item === value)
       const firstRow = selectedRows[0]
       const individual = firstRow?.types === 'Individual'
@@ -191,27 +215,47 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       setIsIndividual(individual)
 
       if (individual) {
-        setTagOptions(selectedRows.map((i) => i.tagNo))
-      } else {
-        setTagOptions([])
-      }
+        // Individual → saare tagNo options dikhao
+        const tags = selectedRows.map((i) => i.tagNo)
+        setTagOptions(tags)
 
-      setFormValues((prev) => ({
-        ...prev,
-        itemName: value,
-        type: firstRow?.types || '',
-        metalType: firstRow?.metalType || '',
-        tagNo: individual ? '' : firstRow?.tagNo || '',
-        weight: individual ? '' : firstRow?.weight || '',
-        amount: individual ? '' : firstRow?.rate || '',
-      }))
+        // ✅ AUTO-SELECT PEHLA TAG (fix!)
+        const firstTagRow = selectedRows[0]
+
+        setFormValues((prev) => ({
+          ...prev,
+          itemName: value,
+          type: firstTagRow?.types || '',
+          metalType: firstTagRow?.metalType || '',
+          tagNo: firstTagRow?.tagNo || '',
+          weight: firstTagRow?.weight || '',
+          amount: firstTagRow?.rate || '',
+        }))
+      } else {
+        // Group → tagNo text, direct fill
+        setTagOptions([])
+
+        setFormValues((prev) => ({
+          ...prev,
+          itemName: value,
+          type: firstRow?.types || '',
+          metalType: firstRow?.metalType || '',
+          tagNo: firstRow?.tagNo || '',
+          weight: firstRow?.weight || '',
+          amount: firstRow?.rate || '',
+        }))
+      }
     } else if (key === 'tagNo') {
+      // User ne tag change kiya — us tag ke hisaab se weight/amount update
       const selectedTag = itemsMaster.find(
         (i) => i.item === formValues.itemName && i.tagNo === value
       )
+
       setFormValues((prev) => ({
         ...prev,
         tagNo: value,
+        type: selectedTag?.types || prev.type,
+        metalType: selectedTag?.metalType || prev.metalType,
         weight: selectedTag?.weight || '',
         amount: selectedTag?.rate || '',
       }))
@@ -269,12 +313,14 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       key: 'billNo',
       label: 'Bill No',
       type: 'text',
+      disabled: true,
       className: 'col-12 col-md-6',
     },
     {
       key: 'billDate',
       label: 'Bill Date',
       type: 'date',
+      disabled: true,
       className: 'col-12 col-md-6',
     },
     {
@@ -288,19 +334,29 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       key: 'address',
       label: 'Address',
       type: 'text',
-      className: 'col-12 col-md-12',
+      disabled: true,
+      className: 'col-12',
     },
     {
       key: 'accountNo',
       label: 'Account No',
       type: 'text',
-      className: 'col-12 col-md-6',
+      disabled: true,
+      className: 'col-12 col-md-4',
     },
     {
       key: 'mobile',
       label: 'Mobile',
       type: 'text',
-      className: 'col-12 col-md-6',
+      disabled: true,
+      className: 'col-12 col-md-4',
+    },
+    {
+      key: 'referredBy',
+      label: 'Referred By',
+      type: 'text',
+      disabled: true,
+      className: 'col-12 col-md-4',
     },
   ]
 
@@ -323,12 +379,14 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       key: 'type',
       label: 'Gold/Silver',
       type: 'text',
+      disabled: true,
       className: 'col-12 col-md-3',
     },
     {
       key: 'metalType',
       label: 'Metal Type',
       type: 'text',
+      disabled: true,
       className: 'col-12 col-md-3',
     },
     {
@@ -341,6 +399,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       key: 'amount',
       label: 'Amount',
       type: 'text',
+      disabled: true,
       className: 'col-12 col-md-3',
     },
     {
@@ -367,14 +426,14 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       key: 'makingAmount',
       label: 'Making',
       type: 'text',
-      disabled: formValues.makingCharge === '%',    // % pe auto-calc, so disabled
+      disabled: formValues.makingCharge === '%',
       className: 'col-12 col-md-3',
     },
     {
       key: 'totalAmount',
       label: 'Total Amount',
       type: 'text',
-      disabled: true,                                // hamesha disabled (auto-calc)
+      disabled: true,
       className: 'col-12 col-md-3',
     },
   ]
@@ -386,9 +445,16 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
     { key: 'finalTotal', label: 'Total', type: 'text', className: 'col-12 col-md-4' },
     { key: 'cash', label: 'Cash', type: 'text', className: 'col-12 col-md-4' },
     { key: 'online', label: 'Online', type: 'text', className: 'col-12 col-md-4' },
-    { key: 'oldGold', label: 'Old Gold', type: 'text', className: 'col-12 col-md-4' },
-    { key: 'roundAmount', label: 'Round Amount', type: 'text', className: 'col-12 col-md-4' },
-    { key: 'balance', label: 'Balance', type: 'text', disabled: true, className: 'col-12 col-md-4' },
+    { key: 'oldGold', label: 'Old Gold', type: 'text', className: 'col-12 col-md-6' },
+    { key: 'roundAmount', label: 'Round Amount', type: 'text', className: 'col-12 col-md-6' },
+    {
+      key: 'additionAll',
+      label: 'Addition All',
+      type: 'text',
+      disabled: true,
+      className: 'col-12 col-md-6',
+    },
+    { key: 'balance', label: 'Balance', type: 'text', disabled: true, className: 'col-12 col-md-6' },
     { key: 'dueDate', label: 'Due Date', type: 'date', className: 'col-12 col-md-6' },
     { key: 'remarks', label: 'Remarks', type: 'text', className: 'col-12' },
     { key: 'paymentRemarks', label: 'Payment Remarks', type: 'text', className: 'col-12' },
@@ -423,6 +489,22 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
   // ADD ITEM
   // =========================
   const handleAddItem = async () => {
+    // 🔒 Validation
+    if (!formValues.itemName?.trim()) {
+      toast.error('Please select an Item')
+      return
+    }
+
+    if (!formValues.weight || Number(formValues.weight) <= 0) {
+      toast.error('Weight is missing for this item')
+      return
+    }
+
+    if (!formValues.amount || Number(formValues.amount) <= 0) {
+      toast.error('Amount is missing for this item')
+      return
+    }
+
     try {
       const formatDateForAPI = (date) => {
         if (!date) return null
@@ -444,26 +526,30 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
 
       const formattedBillDate = formatDateForAPI(formValues.billDate)
 
+      const payload = {
+        billType: formValues.billType,
+        billNo: formValues.billNo,
+        billDate: formattedBillDate,
+        customerName: formValues.customerName,
+        itemName: formValues.itemName,
+        tagNo: formValues.tagNo,
+        type: formValues.type,
+        metalType: formValues.metalType,
+        weight: formValues.weight,
+        amount: formValues.amount,
+        itemDesc: formValues.itemDesc,
+        makingCharge: formValues.makingCharge,
+        percent: formValues.percent || 0,
+        makingAmount: formValues.makingAmount,
+        totalAmount: formValues.totalAmount,
+      }
+
+      console.log('📤 Add Item payload:', payload)
+
       const response = await fetch(`${API_ITEMS_BILLING}/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          billType: formValues.billType,
-          billNo: formValues.billNo,
-          billDate: formattedBillDate,
-          customerName: formValues.customerName,
-          itemName: formValues.itemName,
-          tagNo: formValues.tagNo,
-          type: formValues.type,
-          metalType: formValues.metalType,
-          weight: formValues.weight,
-          amount: formValues.amount,
-          itemDesc: formValues.itemDesc,
-          makingCharge: formValues.makingCharge,
-          percent: formValues.percent || 0,
-          makingAmount: formValues.makingAmount,
-          totalAmount: formValues.totalAmount,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const data = await response.json()
@@ -479,7 +565,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
           toast.success(data.message || 'Item added successfully')
         }
 
-        // Clear item form
+        // Clear only item-related fields
         setFormValues((prev) => ({
           ...prev,
           itemName: '',
@@ -649,31 +735,38 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
     const formattedBillDate = formatDateForAPI(billDate)
     const formattedDueDate = formatDateForAPI(dueDate)
 
+    const payload = {
+      billType: formValues.billType,
+      billNo: formValues.billNo,
+      billDate: formattedBillDate,
+      customerName: formValues.customerName,
+      address: formValues.address,
+      mobile: formValues.mobile,
+      accountNo: formValues.accountNo,
+      referredBy: formValues.referredBy,
+      finalAmount: formValues.finalAmount,
+      cgst: formValues.cgst,
+      sgst: formValues.sgst,
+      finalTotal: formValues.finalTotal,
+      cash: formValues.cash,
+      online: formValues.online,
+      oldGold: formValues.oldGold,
+      roundAmount: formValues.roundAmount,
+      additionAll: formValues.additionAll,
+      balance: formValues.balance,
+      dueDate: formattedDueDate,
+      remarks: formValues.remarks,
+      paymentRemarks: formValues.paymentRemarks,
+    }
+
+    console.log('📤 Save Billing payload:', payload)
+
     const toastId = toast.loading('Saving billing...')
 
     fetch(`${API_BILLING}/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        billType: formValues.billType,
-        billNo: formValues.billNo,
-        billDate: formattedBillDate,
-        customerName: formValues.customerName,
-        address: formValues.address,
-        mobile: formValues.mobile,
-        finalAmount: formValues.finalAmount,
-        cgst: formValues.cgst,
-        sgst: formValues.sgst,
-        finalTotal: formValues.finalTotal,
-        cash: formValues.cash,
-        online: formValues.online,
-        oldGold: formValues.oldGold,
-        roundAmount: formValues.roundAmount,
-        balance: formValues.balance,
-        dueDate: formattedDueDate,
-        remarks: formValues.remarks,
-        paymentRemarks: formValues.paymentRemarks,
-      }),
+      body: JSON.stringify(payload),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -688,7 +781,6 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
           setSavedBillId(data.billingId)
           openBillPrint(data.billingId)
 
-          // Close popup after short delay
           setTimeout(() => {
             onClose?.(true)
           }, 1500)
@@ -724,7 +816,6 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       saveText="Save Bill"
       size="xl"
     >
-      {/* ============ TOP ACTIONS ============ */}
       {savedBillId && (
         <div className="d-flex flex-wrap justify-content-end gap-2 mb-3">
           <button
@@ -736,18 +827,14 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
         </div>
       )}
 
-      {/* ============ 2 COLUMN LAYOUT ============ */}
       <div className="row g-3">
-        {/* LEFT SIDE */}
+        {/* LEFT */}
         <div className="col-12 col-lg-7">
           <div className="d-flex flex-column gap-3">
-
-            {/* Billing Details */}
             <div
               className="rounded-3 p-3 p-sm-4"
               style={{
-                background:
-                  'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
+                background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
                 border: '1px solid rgba(250, 204, 21, 0.15)',
                 boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
               }}
@@ -760,12 +847,10 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
               />
             </div>
 
-            {/* Add Item */}
             <div
               className="rounded-3 p-3 p-sm-4"
               style={{
-                background:
-                  'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
+                background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
                 border: '1px solid rgba(250, 204, 21, 0.15)',
                 boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
               }}
@@ -786,12 +871,10 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
               </div>
             </div>
 
-            {/* Items Table */}
             <div
               className="rounded-3 p-3 p-sm-4"
               style={{
-                background:
-                  'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
+                background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
                 border: '1px solid rgba(250, 204, 21, 0.15)',
                 boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
               }}
@@ -811,16 +894,13 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT */}
         <div className="col-12 col-lg-5">
           <div className="d-flex flex-column gap-3">
-
-            {/* GST & Payment */}
             <div
               className="rounded-3 p-3 p-sm-4"
               style={{
-                background:
-                  'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
+                background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
                 border: '1px solid rgba(250, 204, 21, 0.15)',
                 boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
               }}
@@ -833,13 +913,11 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
               />
             </div>
 
-            {/* Print Bill Bottom */}
             {savedBillId && (
               <div
                 className="rounded-3 p-3 p-sm-4"
                 style={{
-                  background:
-                    'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
+                  background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
                   border: '1px solid rgba(250, 204, 21, 0.15)',
                   boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
                 }}
