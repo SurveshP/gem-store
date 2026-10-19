@@ -113,7 +113,7 @@ export const getLastTag = (req, res) => {
 //         });
 //     }
 
-//     // ✅ AUTO BILL NO if not provided
+//     //AUTO BILL NO if not provided
 //     const doInsert = (billNo) => {
 //         const finalBody = { ...body, billNo };
 
@@ -217,7 +217,7 @@ export const insertStock = (req, res) => {
         db.query(query, values, callback);
     };
 
-    // ✅ Helper: insert into stock_groups (history) — naya schema
+    //Helper: insert into stock_groups (history) — naya schema
     const insertIntoStockGroups = (stockId, finalBody, callback) => {
         const totalWeight = parseFloat(finalBody.weight) || 0;
 
@@ -494,9 +494,9 @@ export const updateStock = (req, res) => {
                     types: current.types,
                     tagNo: current.tagNo,
                     carat: body.carat || current.carat,
-                    weight: addWeight,                // ✅ delta = jitna add hua
-                    previousWeight: previousWeight,   // ✅ purana total
-                    newWeight: newWeight,             // ✅ naya total
+                    weight: addWeight,                //delta = jitna add hua
+                    previousWeight: previousWeight,   //purana total
+                    newWeight: newWeight,             //naya total
                     rate: body.rate || current.rate,
                     metalType: body.metalType || current.metalType,
                 };

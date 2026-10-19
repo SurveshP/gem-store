@@ -23,7 +23,7 @@ const CreditSalePopup = ({
     finalAmount: 0,
     cash: 0,
     oldGold: 0,
-    billFinalBalance: 0,
+    finalBalance: 0,
     nextDate: '',
   })
 
@@ -90,7 +90,7 @@ const CreditSalePopup = ({
       const oldGold = Number(updated.oldGold || 0)
 
       const balance = amount - (cash + oldGold)
-      updated.billFinalBalance = balance < 0 ? 0 : balance
+      updated.finalBalance = balance < 0 ? 0 : balance
 
       return updated
     })
@@ -152,7 +152,7 @@ const CreditSalePopup = ({
       className: 'col-12 col-md-3',
     },
     {
-      key: 'billFinalBalance',
+      key: 'finalBalance',
       label: 'Balance',
       type: 'text',
       disabled: true,
@@ -182,7 +182,7 @@ const CreditSalePopup = ({
     },
     {
       header: 'Balance',
-      render: (row) => `₹${Number(row.billFinalBalance || 0).toFixed(2)}`,
+      render: (row) => `₹${Number(row.finalBalance || 0).toFixed(2)}`,
     },
     {
       header: 'Amount',
@@ -236,17 +236,23 @@ const CreditSalePopup = ({
     // Format date for API
     const formatDate = (date) => {
       if (!date) return ''
-      if (typeof date === 'string') {
-        if (date.includes('-')) {
-          const parts = date.split('-')
-          if (parts[0].length === 4) {
-            // YYYY-MM-DD → DD-MM-YYYY
-            return `${parts[2]}-${parts[1]}-${parts[0]}`
-          }
-          return date
-        }
+
+      let d
+      if (date instanceof Date) {
+        d = date
+      } else if (typeof date === 'string') {
+        d = new Date(date)             // 👈 string ko Date mein parse karo
+      } else {
+        return date
       }
-      return date
+
+      if (isNaN(d.getTime())) return date   // invalid date check
+
+      const day = String(d.getDate()).padStart(2, '0')
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const year = d.getFullYear()
+
+      return `${day}-${month}-${year}`       // 👈 DD-MM-YYYY
     }
 
     const payload = {
@@ -262,7 +268,7 @@ const CreditSalePopup = ({
       nextDate: formatDate(formValues.nextDate),
       mobile: formValues.mobile,
       referredBy: '',
-      billFinalBalance: formValues.billFinalBalance,
+      finalBalance: formValues.finalBalance,
     }
 
     const toastId = toast.loading('Saving credit sale...')

@@ -13,7 +13,7 @@ const creditSaleFields = [
     "nextDate",
     "mobile",
     "referredBy",
-    "billFinalBalance",
+    "finalBalance",
 ];
 
 const createCreditSaleTable = () => {
@@ -32,7 +32,7 @@ const createCreditSaleTable = () => {
             nextDate VARCHAR(20),
             mobile VARCHAR(20),
             referredBy VARCHAR(255),
-            billFinalBalance DECIMAL(10, 2) DEFAULT 0,
+            finalBalance DECIMAL(10, 2) DEFAULT 0,
             activeStatus TINYINT(1) DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_billNo (billNo),

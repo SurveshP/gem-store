@@ -88,7 +88,7 @@ const CustomerDetails = () => {
     setIsCustomerPopupOpen(true)
   }
 
-  // ✅ Credit Sale — CustomerDetailsPopup ki jagah CreditSalePopup khulega
+  //Credit Sale — CustomerDetailsPopup ki jagah CreditSalePopup khulega
   const handleCreditSale = (row) => {
     setSelectedCustomer(row)
     setPopupTitle(`Credit Sale — ${row.customerName}`)

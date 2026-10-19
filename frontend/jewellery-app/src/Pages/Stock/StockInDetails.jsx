@@ -69,7 +69,7 @@ const StockInDetails = () => {
         const record = data.data
         setEditData(record)
 
-        // ✅ Type ke hisaab se popup decide karo
+        //Type ke hisaab se popup decide karo
         if (record?.types === 'Group') {
           setPopupTitle('Edit Group Stock')
           setIsGroupPopupOpen(true)
@@ -153,7 +153,7 @@ const StockInDetails = () => {
     fetchStock('')
   }
 
-  // ✅ Add New — hamesha normal popup (dono type ke liye same)
+  //Add New — hamesha normal popup (dono type ke liye same)
   const handleAddNew = () => {
     setEditData(null)
     setPopupTitle('Add New Stock')

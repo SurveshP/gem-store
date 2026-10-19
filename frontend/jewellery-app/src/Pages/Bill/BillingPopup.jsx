@@ -207,7 +207,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
         referredBy: customer?.referredBy || '',
       }))
     } else if (key === 'itemName') {
-      // ✅ Is item ke saare stock rows
+      //Is item ke saare stock rows
       const selectedRows = itemsMaster.filter((i) => i.item === value)
       const firstRow = selectedRows[0]
       const individual = firstRow?.types === 'Individual'
@@ -219,7 +219,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
         const tags = selectedRows.map((i) => i.tagNo)
         setTagOptions(tags)
 
-        // ✅ AUTO-SELECT PEHLA TAG (fix!)
+        //AUTO-SELECT PEHLA TAG (fix!)
         const firstTagRow = selectedRows[0]
 
         setFormValues((prev) => ({

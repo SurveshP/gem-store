@@ -65,7 +65,7 @@ const CreditListDetails = () => {
     fetchCreditList('')
   }
 
-  // ✅ Credit Payment — CreditPaymentPopup khulega
+  //Credit Payment — CreditPaymentPopup khulega
   const handleCreditPayment = (row) => {
     setSelectedRow(row)
     setPopupTitle(`Credit Payment — ${row.clientName}`)

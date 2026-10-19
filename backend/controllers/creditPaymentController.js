@@ -59,13 +59,13 @@ export const insertCreditPayment = (req, res) => {
 
         const paymentId = result.insertId;
 
-        // ✅ Step 1: credit_list update karo
+        //Step 1: credit_list update karo
         updateCreditList(body, (clErr, clResult) => {
             if (clErr) {
                 console.log("Credit List update failed:", clErr);
             }
 
-            // ✅ Step 2: billing update karo
+            //Step 2: billing update karo
             updateBilling(body, (bErr, bResult) => {
                 if (bErr) {
                     console.log("Billing update failed:", bErr);
@@ -192,7 +192,7 @@ const updateBilling = (paymentBody, callback) => {
         const billing = rows[0];
         const additionAmount = parseFloat(addition) || 0;
 
-        // ✅ paid update ho raha hai, cash nahi
+        //paid update ho raha hai, cash nahi
         const oldPaid = parseFloat(billing.paid) || 0;
         const oldBalance = parseFloat(billing.balance) || 0;
 
@@ -202,7 +202,7 @@ const updateBilling = (paymentBody, callback) => {
         const finalBalance = newBalance < 0 ? 0 : newBalance;
         const newDueDate = dueDate || billing.dueDate;
 
-        // ✅ updateBilling query — paid, balance, dueDate update
+        //updateBilling query — paid, balance, dueDate update
         const updateQuery = `
             UPDATE billing
             SET paid = ?, balance = ?, dueDate = ?
@@ -485,7 +485,7 @@ const reverseBilling = (payment, callback) => {
         const billing = rows[0];
         const additionAmount = parseFloat(addition) || 0;
 
-        // ✅ paid reverse ho raha hai, cash nahi
+        //paid reverse ho raha hai, cash nahi
         const oldPaid = parseFloat(billing.paid) || 0;
         const oldBalance = parseFloat(billing.balance) || 0;
 

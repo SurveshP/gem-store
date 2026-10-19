@@ -43,12 +43,12 @@ const StockInDetailsPopup = ({
     // =========================
     const handleChange = async (key, value) => {
         if (key === 'item') {
-            // ✅ Sahi field: itemName se match karo
+            //Sahi field: itemName se match karo
             const selectedItem = itemsList.find(
                 (i) => i.itemName === value
             )
 
-            // ✅ Sahi field: itemType
+            //Sahi field: itemType
             const selectedType = selectedItem?.itemType || ''
 
             let lastTag = ''
@@ -171,7 +171,7 @@ const StockInDetailsPopup = ({
             key: 'item',
             label: 'Item',
             type: 'select',
-            // ✅ Sahi field: itemName
+            //Sahi field: itemName
             options: itemsList.map((item) => item.itemName),
             className: 'col-12 col-md-6',
         },

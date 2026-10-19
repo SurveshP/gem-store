@@ -343,7 +343,7 @@ const CreditPaymentPopup = ({
       return
     }
 
-    // ✅ UPDATED FORMAT DATE FUNCTION
+    //UPDATED FORMAT DATE FUNCTION
     const formatDate = (date) => {
       if (!date) return ''
 
