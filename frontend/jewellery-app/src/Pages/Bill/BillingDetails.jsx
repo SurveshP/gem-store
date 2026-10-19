@@ -71,7 +71,7 @@ const BillingDetails = () => {
         { header: 'SGST', accessor: 'sgst' },
         { header: 'ROUND', accessor: 'roundAmount' },
         { header: 'TOTAL', accessor: 'finalTotal' },
-        { header: 'PAID', accessor: 'cash' },
+        { header: 'PAID', accessor: 'paid' },
         { header: 'BAL', accessor: 'balance' },
         {
             header: 'ACTION',

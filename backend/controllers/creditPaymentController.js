@@ -57,23 +57,27 @@ export const insertCreditPayment = (req, res) => {
             });
         }
 
-        // ✅ Ab credit_list mein update karo
-        updateCreditList(body, (updateErr, updateResult) => {
-            if (updateErr) {
-                console.log("Credit List update failed:", updateErr);
-                // Payment to save ho gaya, sirf credit list update fail hui
-                return res.status(201).json({
-                    success: true,
-                    message: "Payment saved but credit list update failed",
-                    data: { id: result.insertId, ...body },
-                });
+        const paymentId = result.insertId;
+
+        // ✅ Step 1: credit_list update karo
+        updateCreditList(body, (clErr, clResult) => {
+            if (clErr) {
+                console.log("Credit List update failed:", clErr);
             }
 
-            res.status(201).json({
-                success: true,
-                message: "Payment saved successfully",
-                data: { id: result.insertId, ...body },
-                creditListUpdated: updateResult,
+            // ✅ Step 2: billing update karo
+            updateBilling(body, (bErr, bResult) => {
+                if (bErr) {
+                    console.log("Billing update failed:", bErr);
+                }
+
+                res.status(201).json({
+                    success: true,
+                    message: "Payment saved successfully",
+                    data: { id: paymentId, ...body },
+                    creditListUpdated: clResult,
+                    billingUpdated: bResult,
+                });
             });
         });
     });
@@ -81,16 +85,9 @@ export const insertCreditPayment = (req, res) => {
 
 // ==================== UPDATE CREDIT LIST ====================
 const updateCreditList = (paymentBody, callback) => {
-    const {
-        accountNo,
-        clientName,
-        mobile,
-        pay,
-        addition,
-        dueDate,
-    } = paymentBody;
+    const { accountNo, clientName, mobile, pay, addition, dueDate } =
+        paymentBody;
 
-    // Credit List fetch karo us customer ke liye
     const findQuery = `
         SELECT * FROM credit_list
         WHERE activeStatus = 1
@@ -104,50 +101,34 @@ const updateCreditList = (paymentBody, callback) => {
     `;
 
     db.query(findQuery, [accountNo, mobile, clientName], (findErr, rows) => {
-        if (findErr) {
-            return callback(findErr);
-        }
+        if (findErr) return callback(findErr);
 
         if (rows.length === 0) {
-            return callback(null, {
-                updated: false,
-                message: "No matching credit list found",
-            });
+            return callback(null, { updated: false, message: "Not found" });
         }
 
         const creditList = rows[0];
-
         const payAmount = parseFloat(pay) || 0;
         const additionAmount = parseFloat(addition) || 0;
 
         const newCash = (parseFloat(creditList.cash) || 0) + payAmount;
         const newBalance =
             (parseFloat(creditList.finalBalance) || 0) - additionAmount;
-
         const finalBalance = newBalance < 0 ? 0 : newBalance;
-
-        const updateQuery = `
-            UPDATE credit_list
-            SET
-                cash = ?,
-                finalBalance = ?,
-                nextDate = ?
-            WHERE id = ?
-        `;
+        const newNextDate = dueDate || creditList.nextDate;
 
         db.query(
-            updateQuery,
+            `UPDATE credit_list
+             SET cash = ?, finalBalance = ?, nextDate = ?
+             WHERE id = ?`,
             [
                 newCash.toFixed(2),
                 finalBalance.toFixed(2),
-                dueDate || creditList.nextDate,
+                newNextDate,
                 creditList.id,
             ],
-            (updateErr, updateResult) => {
-                if (updateErr) {
-                    return callback(updateErr);
-                }
-
+            (updateErr) => {
+                if (updateErr) return callback(updateErr);
                 callback(null, {
                     updated: true,
                     creditListId: creditList.id,
@@ -155,6 +136,99 @@ const updateCreditList = (paymentBody, callback) => {
                     newCash: newCash.toFixed(2),
                     oldBalance: creditList.finalBalance,
                     newBalance: finalBalance.toFixed(2),
+                    newNextDate,
+                });
+            }
+        );
+    });
+};
+
+// ==================== UPDATE BILLING ====================
+const updateBilling = (paymentBody, callback) => {
+    const {
+        accountNo,
+        clientName,
+        mobile,
+        addition,
+        dueDate,
+        billingId: providedBillingId,
+        billNo: providedBillNo,
+    } = paymentBody;
+
+    let findQuery = "";
+    let params = [];
+
+    if (providedBillingId) {
+        findQuery = `SELECT * FROM billing WHERE id = ? AND activeStatus = 1`;
+        params = [providedBillingId];
+    } else if (providedBillNo) {
+        findQuery = `SELECT * FROM billing WHERE billNo = ? AND activeStatus = 1`;
+        params = [providedBillNo];
+    } else {
+        findQuery = `
+            SELECT * FROM billing
+            WHERE activeStatus = 1
+            AND (
+                (accountNo = ? AND accountNo IS NOT NULL AND accountNo != '')
+                OR (mobile = ? AND mobile IS NOT NULL AND mobile != '')
+                OR customerName = ?
+            )
+            ORDER BY id DESC
+            LIMIT 1
+        `;
+        params = [accountNo, mobile, clientName];
+    }
+
+    db.query(findQuery, params, (findErr, rows) => {
+        if (findErr) return callback(findErr);
+
+        if (rows.length === 0) {
+            return callback(null, {
+                updated: false,
+                message: "No matching billing found",
+            });
+        }
+
+        const billing = rows[0];
+        const additionAmount = parseFloat(addition) || 0;
+
+        // ✅ paid update ho raha hai, cash nahi
+        const oldPaid = parseFloat(billing.paid) || 0;
+        const oldBalance = parseFloat(billing.balance) || 0;
+
+        const newPaid = oldPaid + additionAmount;
+        const newBalance = oldBalance - additionAmount;
+
+        const finalBalance = newBalance < 0 ? 0 : newBalance;
+        const newDueDate = dueDate || billing.dueDate;
+
+        // ✅ updateBilling query — paid, balance, dueDate update
+        const updateQuery = `
+            UPDATE billing
+            SET paid = ?, balance = ?, dueDate = ?
+            WHERE id = ?
+        `;
+
+        db.query(
+            updateQuery,
+            [
+                newPaid.toFixed(2),
+                finalBalance.toFixed(2),
+                newDueDate,
+                billing.id,
+            ],
+            (updateErr) => {
+                if (updateErr) return callback(updateErr);
+
+                callback(null, {
+                    updated: true,
+                    billingId: billing.id,
+                    billNo: billing.billNo,
+                    oldPaid: oldPaid.toFixed(2),
+                    newPaid: newPaid.toFixed(2),
+                    oldBalance: oldBalance.toFixed(2),
+                    newBalance: finalBalance.toFixed(2),
+                    newDueDate,
                 });
             }
         );
@@ -177,7 +251,6 @@ export const getAllCreditPayments = (req, res) => {
                 error: err,
             });
         }
-
         res.status(200).json({ success: true, data: result });
     });
 };
@@ -208,7 +281,6 @@ export const getPaymentsByCustomer = (req, res) => {
                 error: err,
             });
         }
-
         res.status(200).json({ success: true, data: result });
     });
 };
@@ -290,7 +362,6 @@ export const updateCreditPayment = (req, res) => {
 export const deleteCreditPayment = (req, res) => {
     const { id } = req.params;
 
-    // Pehle payment fetch karo (reverse ke liye)
     db.query(
         `SELECT * FROM credit_payment WHERE id = ?`,
         [id],
@@ -304,11 +375,10 @@ export const deleteCreditPayment = (req, res) => {
 
             const payment = rows[0];
 
-            // Ab delete karo
             db.query(
                 `DELETE FROM credit_payment WHERE id = ?`,
                 [id],
-                (err, result) => {
+                (err) => {
                     if (err) {
                         return res.status(500).json({
                             success: false,
@@ -317,11 +387,13 @@ export const deleteCreditPayment = (req, res) => {
                         });
                     }
 
-                    // ✅ Credit List mein reverse update karo
                     reverseCreditList(payment, () => {
-                        res.status(200).json({
-                            success: true,
-                            message: "Payment deleted and credit list updated",
+                        reverseBilling(payment, () => {
+                            res.status(200).json({
+                                success: true,
+                                message:
+                                    "Payment deleted and credit list & billing updated",
+                            });
                         });
                     });
                 }
@@ -347,13 +419,9 @@ const reverseCreditList = (payment, callback) => {
     `;
 
     db.query(findQuery, [accountNo, mobile, clientName], (findErr, rows) => {
-        if (findErr || rows.length === 0) {
-            console.log("No credit list found for reverse");
-            return callback();
-        }
+        if (findErr || rows.length === 0) return callback();
 
         const creditList = rows[0];
-
         const payAmount = parseFloat(pay) || 0;
         const additionAmount = parseFloat(addition) || 0;
 
@@ -361,25 +429,78 @@ const reverseCreditList = (payment, callback) => {
         const newBalance =
             (parseFloat(creditList.finalBalance) || 0) + additionAmount;
 
-        const updateQuery = `
-            UPDATE credit_list
-            SET
-                cash = ?,
-                finalBalance = ?
-            WHERE id = ?
-        `;
-
         db.query(
-            updateQuery,
+            `UPDATE credit_list SET cash = ?, finalBalance = ? WHERE id = ?`,
             [
                 (newCash < 0 ? 0 : newCash).toFixed(2),
                 newBalance.toFixed(2),
                 creditList.id,
             ],
-            (updateErr) => {
-                if (updateErr) {
-                    console.log("Reverse update failed:", updateErr);
-                }
+            (err) => {
+                if (err) console.log("Reverse credit_list failed:", err);
+                callback();
+            }
+        );
+    });
+};
+
+// ==================== REVERSE BILLING ====================
+const reverseBilling = (payment, callback) => {
+    const {
+        accountNo,
+        clientName,
+        mobile,
+        addition,
+        billingId: providedBillingId,
+        billNo: providedBillNo,
+    } = payment;
+
+    let findQuery = "";
+    let params = [];
+
+    if (providedBillingId) {
+        findQuery = `SELECT * FROM billing WHERE id = ? AND activeStatus = 1`;
+        params = [providedBillingId];
+    } else if (providedBillNo) {
+        findQuery = `SELECT * FROM billing WHERE billNo = ? AND activeStatus = 1`;
+        params = [providedBillNo];
+    } else {
+        findQuery = `
+            SELECT * FROM billing
+            WHERE activeStatus = 1
+            AND (
+                (accountNo = ? AND accountNo IS NOT NULL AND accountNo != '')
+                OR (mobile = ? AND mobile IS NOT NULL AND mobile != '')
+                OR customerName = ?
+            )
+            ORDER BY id DESC
+            LIMIT 1
+        `;
+        params = [accountNo, mobile, clientName];
+    }
+
+    db.query(findQuery, params, (findErr, rows) => {
+        if (findErr || rows.length === 0) return callback();
+
+        const billing = rows[0];
+        const additionAmount = parseFloat(addition) || 0;
+
+        // ✅ paid reverse ho raha hai, cash nahi
+        const oldPaid = parseFloat(billing.paid) || 0;
+        const oldBalance = parseFloat(billing.balance) || 0;
+
+        const newPaid = oldPaid - additionAmount;
+        const newBalance = oldBalance + additionAmount;
+
+        db.query(
+            `UPDATE billing SET paid = ?, balance = ? WHERE id = ?`,
+            [
+                (newPaid < 0 ? 0 : newPaid).toFixed(2),
+                newBalance.toFixed(2),
+                billing.id,
+            ],
+            (err) => {
+                if (err) console.log("Reverse billing failed:", err);
                 callback();
             }
         );

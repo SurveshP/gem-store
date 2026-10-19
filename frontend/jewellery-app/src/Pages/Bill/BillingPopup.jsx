@@ -753,6 +753,7 @@ const BillingPopup = ({ isOpen, onClose, title }) => {
       oldGold: formValues.oldGold,
       roundAmount: formValues.roundAmount,
       additionAll: formValues.additionAll,
+      paid: formValues.additionAll,
       balance: formValues.balance,
       dueDate: formattedDueDate,
       remarks: formValues.remarks,
