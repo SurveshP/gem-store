@@ -11,7 +11,8 @@ import { createBillingTable } from "./models/billingModel.js";
 import { createEstimateTable } from "./models/estimateModel.js";         
 import { createCreditSaleTable } from "./models/creditSaleModel.js";      
 import { createCreditListTable } from "./models/creditListModel.js";
-import { createCreditPaymentTable } from "./models/creditPaymentModel.js";  
+import { createCreditPaymentTable } from "./models/creditPaymentModel.js"; 
+import { createExpensesTable } from "./models/expensesModel.js"; 
 
 import customerRoutes from "./routes/customerRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
@@ -20,6 +21,8 @@ import itemsBillingRoutes from "./routes/itemsBillingRoutes.js";
 import billingRoutes from "./routes/billingRoutes.js";      
 import creditSaleRoutes from "./routes/creditSaleRoutes.js";           
 import creditPaymentRoutes from "./routes/creditPaymentRoutes.js";  
+import expensesRoutes from "./routes/expensesRoutes.js";  
+import estimateReportRoutes from "./routes/estimateReportRoutes.js";
 
 const app = express();
 
@@ -39,6 +42,7 @@ createEstimateTable();
 createCreditSaleTable();   
 createCreditListTable();
 createCreditPaymentTable(); 
+createExpensesTable(); 
 
 // ROUTES
 app.use("/api/customers", customerRoutes);
@@ -47,7 +51,9 @@ app.use("/api/stock", stockRoutes);
 app.use("/api/itemsBilling", itemsBillingRoutes);   
 app.use("/api/billing", billingRoutes);     
 app.use("/api/creditSale", creditSaleRoutes);   
-app.use("/api/creditPayment", creditPaymentRoutes);      
+app.use("/api/creditPayment", creditPaymentRoutes); 
+app.use("/api/expenses", expensesRoutes);    
+app.use("/api/estimateReport", estimateReportRoutes); 
 
 app.get("/", (req, res) => {
     res.send("Jewellery Backend Running");

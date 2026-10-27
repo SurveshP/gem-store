@@ -24,7 +24,18 @@ const DynamicForm = ({ fields, formValues, onChange }) => {
           <FloatingDatePicker
             label={field.label}
             value={formValues[field.key] || null}
-            onChange={(date) => onChange(field.key, date)}
+            onChange={(date) => {
+              // ✅ Date object ko String (YYYY-MM-DD) mein convert karo
+              if (date) {
+                // Timezone offset hatane ke liye manual format
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                onChange(field.key, `${year}-${month}-${day}`);
+              } else {
+                onChange(field.key, '');
+              }
+            }}
           />
         )
 
@@ -39,16 +50,12 @@ const DynamicForm = ({ fields, formValues, onChange }) => {
         )
 
       case 'file':
-        // Determine preview source
         const fileValue = formValues[field.key]
-
         let previewSrc = null
 
         if (fileValue instanceof File) {
-          // Nayi image select ki gayi hai
           previewSrc = URL.createObjectURL(fileValue)
         } else if (typeof fileValue === 'string' && fileValue.trim() !== '') {
-          // Existing image (backend se aayi URL)
           previewSrc = fileValue.startsWith('http')
             ? fileValue
             : `http://localhost:5000${fileValue}`
