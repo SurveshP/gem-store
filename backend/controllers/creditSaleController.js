@@ -1,8 +1,13 @@
 import db from "../config/db.js";
 import { creditSaleFields } from "../models/creditSaleModel.js";
+import { estimateFields } from "../models/estimateModel.js";
 
 const pickCreditSaleFields = (body) => {
     return creditSaleFields.map((field) => body[field] ?? null);
+};
+
+const pickEstimateFields = (body) => {
+    return estimateFields.map((field) => body[field] ?? null);
 };
 
 // ==================== GET ALL CREDIT SALES ====================
@@ -111,7 +116,7 @@ export const insertCreditSale = (req, res) => {
     const query = `
         INSERT INTO credit_sale
         (${creditSaleFields.join(", ")})
-        VALUES (${creditSaleFields.map(() => "?").join(", ")})
+        VALUES (${creditSaleFields.map(() => "?").join(", ")}) 
     `;
 
     db.query(query, values, (err, result) => {
@@ -125,19 +130,53 @@ export const insertCreditSale = (req, res) => {
 
         const creditSaleId = result.insertId;
 
-        //Ab CreditList update karo
+        // Step 1: CreditList update
         updateCreditList(body, (clErr, clResult) => {
-            if (clErr) {
-                console.log("CreditList update failed:", clErr);
-            }
+            if (clErr) console.log("CreditList update failed:", clErr);
 
-            res.status(201).json({
-                success: true,
-                message: "Credit sale saved successfully",
-                data: { id: creditSaleId, ...body },
-                creditListUpdated: clResult,
+            // ✅ Step 2: Estimate insert (NAYA)
+            insertEstimateFromSale(creditSaleId, body, () => {
+                res.status(201).json({
+                    success: true,
+                    message: "Credit sale saved successfully",
+                    data: { id: creditSaleId, ...body },
+                    creditListUpdated: clResult,
+                });
             });
         });
+    });
+};
+
+// ==================== INSERT ESTIMATE (FROM SALE) ====================
+const insertEstimateFromSale = (creditSaleId, saleData, callback) => {
+    const estimateBody = {
+        billingId: creditSaleId,  // Link as reference (billingId mein creditSaleId save hoga)
+        billNo: saleData.billNo || "",
+        billDate: saleData.billDate,
+        customerName: saleData.clientName,
+        accountNo: saleData.accountNo,
+        amount: saleData.finalAmount,
+        pay: saleData.cash,
+        oldGold: saleData.oldGold,
+        textSwapOnline: 0,           // CreditSale mein ye field nahi hai
+        round: 0,
+        balance: saleData.finalBalance,
+        dueDate: saleData.nextDate,
+        additionAll: Number(saleData.cash || 0) + Number(saleData.oldGold || 0), // Cash + OldGold
+        totalFinal: saleData.finalAmount,
+    };
+
+    const estimateValues = pickEstimateFields(estimateBody);
+
+    const insertQuery = `
+        INSERT INTO estimate
+        (${estimateFields.join(", ")})
+        VALUES (${estimateFields.map(() => "?").join(", ")})
+    `;
+
+    db.query(insertQuery, estimateValues, (insertErr) => {
+        if (insertErr) console.log("Estimate insert failed from CreditSale:", insertErr);
+        callback();
     });
 };
 
@@ -150,6 +189,7 @@ const updateCreditList = (saleBody, callback) => {
         finalAmount,
         cash,
         oldGold,
+        addition,        // 👈 NAYA
         finalBalance,
     } = saleBody;
 
@@ -184,14 +224,10 @@ const updateCreditList = (saleBody, callback) => {
         const addOldGold = parseFloat(oldGold) || 0;
         const addBalance = parseFloat(finalBalance) || 0;
 
-        //PURANI value + NAYI value (PLUS)
-        const newFinalAmount =
-            (parseFloat(creditList.finalAmount) || 0) + addFinalAmount;
+        const newFinalAmount = (parseFloat(creditList.finalAmount) || 0) + addFinalAmount;
         const newCash = (parseFloat(creditList.cash) || 0) + addCash;
-        const newOldGold =
-            (parseFloat(creditList.oldGold) || 0) + addOldGold;
-        const newFinalBalance =
-            (parseFloat(creditList.finalBalance) || 0) + addBalance;
+        const newOldGold = (parseFloat(creditList.oldGold) || 0) + addOldGold;
+        const newFinalBalance = (parseFloat(creditList.finalBalance) || 0) + addBalance;
 
         const updateQuery = `
             UPDATE credit_list
@@ -220,13 +256,9 @@ const updateCreditList = (saleBody, callback) => {
                 callback(null, {
                     updated: true,
                     creditListId: creditList.id,
-                    oldFinalAmount: creditList.finalAmount,
                     newFinalAmount: newFinalAmount.toFixed(2),
-                    oldCash: creditList.cash,
                     newCash: newCash.toFixed(2),
-                    oldOldGold: creditList.oldGold,
                     newOldGold: newOldGold.toFixed(2),
-                    oldFinalBalance: creditList.finalBalance,
                     newFinalBalance: newFinalBalance.toFixed(2),
                 });
             }
@@ -313,14 +345,10 @@ const reverseCreditList = (creditSale, callback) => {
         const subOldGold = parseFloat(oldGold) || 0;
         const subBalance = parseFloat(finalBalance) || 0;
 
-        // PURANI value - NAYI value (MINUS)
-        const newFinalAmount =
-            (parseFloat(creditList.finalAmount) || 0) - subFinalAmount;
+        const newFinalAmount = (parseFloat(creditList.finalAmount) || 0) - subFinalAmount;
         const newCash = (parseFloat(creditList.cash) || 0) - subCash;
-        const newOldGold =
-            (parseFloat(creditList.oldGold) || 0) - subOldGold;
-        const newFinalBalance =
-            (parseFloat(creditList.finalBalance) || 0) - subBalance;
+        const newOldGold = (parseFloat(creditList.oldGold) || 0) - subOldGold;
+        const newFinalBalance = (parseFloat(creditList.finalBalance) || 0) - subBalance;
 
         const updateQuery = `
             UPDATE credit_list
@@ -342,11 +370,10 @@ const reverseCreditList = (creditSale, callback) => {
                 creditList.id,
             ],
             (updateErr) => {
-                if (updateErr) {
-                    console.log("Reverse credit_list failed:", updateErr);
-                }
+                if (updateErr) console.log("Reverse credit_list failed:", updateErr);
                 callback();
             }
         );
     });
 };
+

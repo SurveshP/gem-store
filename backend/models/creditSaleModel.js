@@ -10,6 +10,7 @@ const creditSaleFields = [
     "finalAmount",
     "cash",
     "oldGold",
+    "addition",       // 👈 NAYA
     "nextDate",
     "mobile",
     "referredBy",
@@ -24,12 +25,13 @@ const createCreditSaleTable = () => {
             billNo VARCHAR(50),
             clientName VARCHAR(255),
             accountNo VARCHAR(100),
-            billDate VARCHAR(20),
+            billDate VARCHAR(50),
             itemDescription TEXT,
             finalAmount DECIMAL(10, 2) DEFAULT 0,
             cash DECIMAL(10, 2) DEFAULT 0,
             oldGold DECIMAL(10, 2) DEFAULT 0,
-            nextDate VARCHAR(20),
+            addition DECIMAL(10, 2) DEFAULT 0,   -- 👈 NAYA
+            nextDate VARCHAR(50),
             mobile VARCHAR(20),
             referredBy VARCHAR(255),
             finalBalance DECIMAL(10, 2) DEFAULT 0,

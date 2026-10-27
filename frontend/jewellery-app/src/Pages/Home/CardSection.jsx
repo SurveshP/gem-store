@@ -12,7 +12,7 @@ const cards = [
   { title: 'Customer Details', icon: <FaUsers />, route: '/customerDetails' },
   { title: 'Credit List', icon: <FaListAlt />, route: '/creditList' },
   { title: 'Creditlist 0 Balance', icon: <FaBalanceScale />, route: '/creditlistZeroBalance' },
-  { title: 'Expenses / Income', icon: <FaWallet />, route: '/expensesDetails' },
+  { title: 'Expenses / Income', icon: <FaWallet />, route: '/income-expenses' },
   { title: 'Billing', icon: <FaFileInvoiceDollar />, route: '/billing' },
   { title: 'Credit 25K', icon: <FaBalanceScale />, route: '/creditList25K' },
 ]

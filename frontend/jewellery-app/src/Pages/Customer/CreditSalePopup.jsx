@@ -23,6 +23,7 @@ const CreditSalePopup = ({
     finalAmount: 0,
     cash: 0,
     oldGold: 0,
+    addition: 0,         // 👈 NAYA
     finalBalance: 0,
     nextDate: '',
   })
@@ -79,7 +80,7 @@ const CreditSalePopup = ({
   }
 
   // =========================
-  // AUTO CALCULATE BALANCE
+  // AUTO CALCULATE (UPDATED)
   // =========================
   const onChange = (key, value) => {
     setFormValues((prev) => {
@@ -89,7 +90,12 @@ const CreditSalePopup = ({
       const cash = Number(updated.cash || 0)
       const oldGold = Number(updated.oldGold || 0)
 
-      const balance = amount - (cash + oldGold)
+      // ✅ Addition = Cash + Old Gold
+      const addition = cash + oldGold
+      updated.addition = addition
+
+      // ✅ Balance = Final Amount - Addition
+      const balance = amount - addition
       updated.finalBalance = balance < 0 ? 0 : balance
 
       return updated
@@ -151,12 +157,20 @@ const CreditSalePopup = ({
       type: 'text',
       className: 'col-12 col-md-3',
     },
+    // ✅ ADDITION FIELD
+    {
+      key: 'addition',
+      label: 'Addition',
+      type: 'text',
+      disabled: true,
+      className: 'col-12 col-md-3',
+    },
     {
       key: 'finalBalance',
       label: 'Balance',
       type: 'text',
       disabled: true,
-      className: 'col-12 col-md-3',
+      className: 'col-12 col-md-6',
     },
     {
       key: 'nextDate',
@@ -172,14 +186,8 @@ const CreditSalePopup = ({
   const columns = [
     { header: 'SN', render: (_, index) => index + 1 },
     { header: 'Bill No', accessor: 'billNo' },
-    {
-      header: 'Date',
-      accessor: 'billDate',
-    },
-    {
-      header: 'Item Desc',
-      accessor: 'itemDescription',
-    },
+    { header: 'Date', accessor: 'billDate' },
+    { header: 'Item Desc', accessor: 'itemDescription' },
     {
       header: 'Balance',
       render: (row) => `₹${Number(row.finalBalance || 0).toFixed(2)}`,
@@ -188,10 +196,7 @@ const CreditSalePopup = ({
       header: 'Amount',
       render: (row) => `₹${Number(row.finalAmount || 0).toFixed(2)}`,
     },
-    {
-      header: 'Next Date',
-      accessor: 'nextDate',
-    },
+    { header: 'Next Date', accessor: 'nextDate' },
     {
       header: 'Action',
       render: (row) => (
@@ -208,7 +213,6 @@ const CreditSalePopup = ({
 
   const handleViewBill = (row) => {
     if (row.billNo) {
-      // Agar billNo hai to billPrint kholo
       const w = 1200
       const h = 700
       const left = window.screen.width / 2 - w / 2
@@ -233,7 +237,6 @@ const CreditSalePopup = ({
       return
     }
 
-    // Format date for API
     const formatDate = (date) => {
       if (!date) return ''
 
@@ -241,18 +244,18 @@ const CreditSalePopup = ({
       if (date instanceof Date) {
         d = date
       } else if (typeof date === 'string') {
-        d = new Date(date)             // 👈 string ko Date mein parse karo
+        d = new Date(date)
       } else {
         return date
       }
 
-      if (isNaN(d.getTime())) return date   // invalid date check
+      if (isNaN(d.getTime())) return date
 
       const day = String(d.getDate()).padStart(2, '0')
       const month = String(d.getMonth() + 1).padStart(2, '0')
       const year = d.getFullYear()
 
-      return `${day}-${month}-${year}`       // 👈 DD-MM-YYYY
+      return `${day}-${month}-${year}`
     }
 
     const payload = {
@@ -265,6 +268,7 @@ const CreditSalePopup = ({
       finalAmount: formValues.finalAmount,
       cash: formValues.cash,
       oldGold: formValues.oldGold,
+      addition: formValues.addition,       // 👈 Payload mein bhi bheja
       nextDate: formatDate(formValues.nextDate),
       mobile: formValues.mobile,
       referredBy: '',
@@ -322,7 +326,6 @@ const CreditSalePopup = ({
       saveText="Add to Credit List"
       size="lg"
     >
-      {/* ============ FORM ============ */}
       <div
         className="rounded-3 p-3 p-sm-4 mb-4"
         style={{
@@ -339,7 +342,6 @@ const CreditSalePopup = ({
         />
       </div>
 
-      {/* ============ CREDIT SALE HISTORY ============ */}
       {creditSales.length > 0 && (
         <div
           className="rounded-3 p-3 p-sm-4"

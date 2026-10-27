@@ -1,8 +1,13 @@
 import db from "../config/db.js";
 import { creditPaymentFields } from "../models/creditPaymentModel.js";
+import { estimateFields } from "../models/estimateModel.js";
 
 const pickCreditPaymentFields = (body) => {
     return creditPaymentFields.map((field) => body[field] ?? null);
+};
+
+const pickEstimateFields = (body) => {
+    return estimateFields.map((field) => body[field] ?? null);
 };
 
 const pickUpdateFields = (body) => {
@@ -59,24 +64,23 @@ export const insertCreditPayment = (req, res) => {
 
         const paymentId = result.insertId;
 
-        //Step 1: credit_list update karo
+        // Step 1: credit_list update karo
         updateCreditList(body, (clErr, clResult) => {
-            if (clErr) {
-                console.log("Credit List update failed:", clErr);
-            }
+            if (clErr) console.log("Credit List update failed:", clErr);
 
-            //Step 2: billing update karo
+            // Step 2: billing update karo
             updateBilling(body, (bErr, bResult) => {
-                if (bErr) {
-                    console.log("Billing update failed:", bErr);
-                }
+                if (bErr) console.log("Billing update failed:", bErr);
 
-                res.status(201).json({
-                    success: true,
-                    message: "Payment saved successfully",
-                    data: { id: paymentId, ...body },
-                    creditListUpdated: clResult,
-                    billingUpdated: bResult,
+                // ✅ Step 3: Estimate insert (NAYA)
+                insertEstimateFromPayment(paymentId, body, () => {
+                    res.status(201).json({
+                        success: true,
+                        message: "Payment saved successfully",
+                        data: { id: paymentId, ...body },
+                        creditListUpdated: clResult,
+                        billingUpdated: bResult,
+                    });
                 });
             });
         });
@@ -232,6 +236,39 @@ const updateBilling = (paymentBody, callback) => {
                 });
             }
         );
+    });
+};
+
+// ==================== INSERT ESTIMATE (FROM PAYMENT) ====================
+const insertEstimateFromPayment = (paymentId, paymentData, callback) => {
+    const estimateBody = {
+        billingId: paymentData.billingId || paymentId, // Link
+        billNo: paymentData.billNo || "",
+        billDate: paymentData.currentDate,             // payment ki date
+        customerName: paymentData.clientName,
+        accountNo: paymentData.accountNo,
+        amount: paymentData.amount,
+        pay: paymentData.pay,
+        oldGold: paymentData.oldGold,
+        textSwapOnline: paymentData.swap,
+        round: paymentData.round,
+        balance: paymentData.balance,
+        dueDate: paymentData.dueDate,
+        additionAll: paymentData.addition,             // pay + gold + swap + round
+        totalFinal: paymentData.amount,                // original total amount
+    };
+
+    const estimateValues = pickEstimateFields(estimateBody);
+
+    const insertQuery = `
+        INSERT INTO estimate
+        (${estimateFields.join(", ")})
+        VALUES (${estimateFields.map(() => "?").join(", ")})
+    `;
+
+    db.query(insertQuery, estimateValues, (insertErr) => {
+        if (insertErr) console.log("Estimate insert failed from CreditPayment:", insertErr);
+        callback();
     });
 };
 
