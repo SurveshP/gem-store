@@ -134,7 +134,7 @@ export const insertCreditSale = (req, res) => {
         updateCreditList(body, (clErr, clResult) => {
             if (clErr) console.log("CreditList update failed:", clErr);
 
-            // ✅ Step 2: Estimate insert (NAYA)
+            //Step 2: Estimate insert (NAYA)
             insertEstimateFromSale(creditSaleId, body, () => {
                 res.status(201).json({
                     success: true,

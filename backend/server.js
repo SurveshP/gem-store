@@ -19,10 +19,12 @@ import itemRoutes from "./routes/itemRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
 import itemsBillingRoutes from "./routes/itemsBillingRoutes.js";          
 import billingRoutes from "./routes/billingRoutes.js";      
-import creditSaleRoutes from "./routes/creditSaleRoutes.js";           
+import creditSaleRoutes from "./routes/creditSaleRoutes.js";      
+import creditListRoutes from "./routes/creditListRoutes.js";     
 import creditPaymentRoutes from "./routes/creditPaymentRoutes.js";  
 import expensesRoutes from "./routes/expensesRoutes.js";  
 import estimateReportRoutes from "./routes/estimateReportRoutes.js";
+import stockRegisterRoutes from "./routes/stockRegisterRoutes.js";
 
 const app = express();
 
@@ -54,6 +56,8 @@ app.use("/api/creditSale", creditSaleRoutes);
 app.use("/api/creditPayment", creditPaymentRoutes); 
 app.use("/api/expenses", expensesRoutes);    
 app.use("/api/estimateReport", estimateReportRoutes); 
+app.use("/api/stockRegister", stockRegisterRoutes);
+app.use("/api/creditList", creditListRoutes);
 
 app.get("/", (req, res) => {
     res.send("Jewellery Backend Running");

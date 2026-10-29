@@ -90,11 +90,11 @@ const CreditSalePopup = ({
       const cash = Number(updated.cash || 0)
       const oldGold = Number(updated.oldGold || 0)
 
-      // ✅ Addition = Cash + Old Gold
+      //Addition = Cash + Old Gold
       const addition = cash + oldGold
       updated.addition = addition
 
-      // ✅ Balance = Final Amount - Addition
+      //Balance = Final Amount - Addition
       const balance = amount - addition
       updated.finalBalance = balance < 0 ? 0 : balance
 
@@ -157,7 +157,7 @@ const CreditSalePopup = ({
       type: 'text',
       className: 'col-12 col-md-3',
     },
-    // ✅ ADDITION FIELD
+    //ADDITION FIELD
     {
       key: 'addition',
       label: 'Addition',

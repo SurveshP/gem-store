@@ -48,7 +48,7 @@ const Navbar = () => {
       links: [
         { to: '/stockInDetails', label: 'Stock In' },
         { to: '/stockRegister', label: 'Stock Register' },
-        { to: '/stockInRegister', label: 'Stock In Register' },
+        { to: '/stockInOutRegister', label: 'Stock In Out Register' },
         { to: '/stockOutRegisterGold', label: 'Stock Out Register Gold' },
         { to: '/stockOutRegisterSilver', label: 'Stock Out Register Silver' },
         { divider: true },

@@ -25,7 +25,7 @@ const ExpensesPopup = ({
     if (isOpen) {
       let formattedDate = initialValues.date || ''
       
-      // ✅ SAFE DATE PARSER: Convert DD-MM-YYYY to YYYY-MM-DD
+      //SAFE DATE PARSER: Convert DD-MM-YYYY to YYYY-MM-DD
       if (formattedDate && typeof formattedDate === 'string') {
         if (formattedDate.includes('-')) {
           const parts = formattedDate.split('-')

@@ -72,7 +72,7 @@ export const insertCreditPayment = (req, res) => {
             updateBilling(body, (bErr, bResult) => {
                 if (bErr) console.log("Billing update failed:", bErr);
 
-                // ✅ Step 3: Estimate insert (NAYA)
+                //Step 3: Estimate insert (NAYA)
                 insertEstimateFromPayment(paymentId, body, () => {
                     res.status(201).json({
                         success: true,

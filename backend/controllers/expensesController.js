@@ -66,7 +66,7 @@ export const insertExpense = (req, res) => {
 
         const expenseId = result.insertId;
 
-        // ✅ Estimate table mein clean data insert karo
+        //Estimate table mein clean data insert karo
         const estimateBody = {
             expenseId: expenseId,              // 👈 Proper Link
             billDate: body.date,
@@ -197,7 +197,7 @@ export const updateExpense = (req, res) => {
         if (err) return res.status(500).json({ success: false, message: "Update failed", error: err });
         if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Record not found" });
 
-        // ✅ Estimate table mein bhi update karo (expenseId se match karke)
+        //Estimate table mein bhi update karo (expenseId se match karke)
         const estimateUpdateQuery = `
             UPDATE estimate 
             SET income = ?, expense = ?, remark = ?, billDate = ?, customerName = ?
@@ -228,7 +228,7 @@ export const deleteExpense = (req, res) => {
         if (err) return res.status(500).json({ success: false, message: "Delete failed", error: err });
         if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Record not found" });
 
-        // ✅ Estimate se bhi delete karo (expenseId se match karke)
+        //Estimate se bhi delete karo (expenseId se match karke)
         db.query(`DELETE FROM estimate WHERE expenseId = ?`, [id], (estErr) => {
             if (estErr) console.log("Estimate delete failed:", estErr);
             res.status(200).json({ success: true, message: "Record deleted successfully" });
