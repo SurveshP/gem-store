@@ -24,8 +24,9 @@ const CreditListDetails = () => {
   const fetchCreditList = useCallback(async (searchText = '') => {
     setLoading(true)
     try {
+      //URL update kiya gaya hai 'search' parameter bhejne ke liye
       const url = searchText.trim()
-        ? `${API_BASE}/customer?customerName=${encodeURIComponent(searchText.trim())}`
+        ? `${API_BASE}/customer?search=${encodeURIComponent(searchText.trim())}`
         : `${API_BASE}/all`
 
       const res = await fetch(url)
@@ -121,7 +122,7 @@ const CreditListDetails = () => {
   const fields = [
     {
       key: 'search',
-      label: 'Search Credit List',
+      label: 'Search by Account No., Customer Name, Mobile No.',
       type: 'text',
       placeholder: 'Enter name, mobile, account no...',
       className: 'col-12',
