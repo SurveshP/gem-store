@@ -58,7 +58,7 @@ const Navbar = () => {
     {
       label: 'Report',
       links: [
-        { to: '/creditlistDatewise', label: 'Creditlist Datewise' },
+        { to: '/creditListDatewise', label: 'Creditlist Datewise' },
         { to: '/cColumnReports', label: 'C Column Reports' },
         { to: '/dColumnReports', label: 'D Column Reports' },
         { to: '/billingReports', label: 'Billing Report' },
