@@ -4,18 +4,18 @@ import DynamicForm from '../../Components/Form/DynamicForm'
 import Button from '../../Components/Bottons/Button'
 import BreadcrumbNav from '../../Layouts/Header/BreadcrumbNav'
 import DynamicTable from '../../Components/Tables/DynamicTable'
-import CreditPaymentPopup from './CreditPaymentPopup'        // 👈 NAYA
-import { FaTrash, FaMoneyCheckAlt } from 'react-icons/fa'    // 👈 FaPrint hata diya, FaMoneyCheckAlt add
+import CreditPaymentPopup from './CreditPaymentPopup'
+import { FaTrash, FaMoneyCheckAlt } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 
-const API_BASE = 'http://localhost:5000/api/billing'
+//Naya API route (alag controller)
+const API_BASE = 'http://localhost:5000/api/creditList'
 
 const CreditListDetails = () => {
   const [formValues, setFormValues] = useState({})
   const [creditList, setCreditList] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // 👈 Payment popup state
   const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false)
   const [selectedRow, setSelectedRow] = useState(null)
   const [popupTitle, setPopupTitle] = useState('')
@@ -23,13 +23,10 @@ const CreditListDetails = () => {
   // ================= FETCH CREDIT LIST =================
   const fetchCreditList = useCallback(async (searchText = '') => {
     setLoading(true)
-
     try {
       const url = searchText.trim()
-        ? `${API_BASE}/credit-list/customer?customerName=${encodeURIComponent(
-          searchText.trim()
-        )}`
-        : `${API_BASE}/credit-list/all`
+        ? `${API_BASE}/customer?customerName=${encodeURIComponent(searchText.trim())}`
+        : `${API_BASE}/all`
 
       const res = await fetch(url)
       const data = await res.json()
@@ -65,7 +62,6 @@ const CreditListDetails = () => {
     fetchCreditList('')
   }
 
-  //Credit Payment — CreditPaymentPopup khulega
   const handleCreditPayment = (row) => {
     setSelectedRow(row)
     setPopupTitle(`Credit Payment — ${row.clientName}`)
@@ -75,16 +71,13 @@ const CreditListDetails = () => {
   const handlePaymentPopupClose = (refresh = false) => {
     setIsPaymentPopupOpen(false)
     setSelectedRow(null)
-
     if (refresh === true) {
       fetchCreditList(formValues.search || '')
     }
   }
 
   const handleDelete = async (row) => {
-    const confirmed = window.confirm(
-      `Delete credit entry for ${row.clientName}?`
-    )
+    const confirmed = window.confirm(`Delete credit entry for ${row.clientName}?`)
     if (!confirmed) return
 
     if (!row.billingId) {
@@ -95,7 +88,8 @@ const CreditListDetails = () => {
     const toastId = toast.loading('Deleting credit entry...')
 
     try {
-      const res = await fetch(`${API_BASE}/${row.billingId}`, {
+      // Note: Ye purana endpoint use kar raha hai kyunki billing delete karna hai
+      const res = await fetch(`http://localhost:5000/api/billing/${row.billingId}`, {
         method: 'DELETE',
       })
       const data = await res.json()
@@ -159,8 +153,7 @@ const CreditListDetails = () => {
       render: (row) => (
         <span
           style={{
-            color:
-              Number(row.finalBalance || 0) > 0 ? '#ef4444' : '#22c55e',
+            color: Number(row.finalBalance || 0) > 0 ? '#ef4444' : '#22c55e',
             fontWeight: 600,
           }}
         >
@@ -173,25 +166,11 @@ const CreditListDetails = () => {
       header: 'Status',
       render: (row) =>
         Number(row.finalBalance || 0) > 0 ? (
-          <span
-            className="badge rounded-pill px-2 py-1"
-            style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#ef4444',
-              fontSize: '0.75rem',
-            }}
-          >
+          <span className="badge rounded-pill px-2 py-1" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', fontSize: '0.75rem' }}>
             Pending
           </span>
         ) : (
-          <span
-            className="badge rounded-pill px-2 py-1"
-            style={{
-              background: 'rgba(34, 197, 94, 0.15)',
-              color: '#22c55e',
-              fontSize: '0.75rem',
-            }}
-          >
+          <span className="badge rounded-pill px-2 py-1" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', fontSize: '0.75rem' }}>
             Cleared
           </span>
         ),
@@ -203,24 +182,15 @@ const CreditListDetails = () => {
           <FaMoneyCheckAlt
             role="button"
             title="Credit Payment"
-            style={{
-              color: '#fb923c',
-              cursor: 'pointer',
-              transition: 'transform 0.15s',
-            }}
+            style={{ color: '#fb923c', cursor: 'pointer', transition: 'transform 0.15s' }}
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             onClick={() => handleCreditPayment(row)}
           />
-
           <FaTrash
             role="button"
             title="Delete"
-            style={{
-              color: '#ef4444',
-              cursor: 'pointer',
-              transition: 'transform 0.15s',
-            }}
+            style={{ color: '#ef4444', cursor: 'pointer', transition: 'transform 0.15s' }}
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             onClick={() => handleDelete(row)}
@@ -240,79 +210,33 @@ const CreditListDetails = () => {
         {/* PAGE HEADER */}
         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
           <div className="d-flex align-items-center">
-            <span
-              style={{
-                display: 'inline-block',
-                width: 4,
-                height: 26,
-                background: '#facc15',
-                borderRadius: 4,
-                marginRight: 12,
-              }}
-            ></span>
+            <span style={{ display: 'inline-block', width: 4, height: 26, background: '#facc15', borderRadius: 4, marginRight: 12 }}></span>
             <div>
               <h2 className="h4 fw-bold mb-0 text-warning">Credit List</h2>
-              <p className="small text-secondary mb-0">
-                Track pending payments and credit sales
-              </p>
+              <p className="small text-secondary mb-0">Track pending payments and credit sales</p>
             </div>
           </div>
-
-          <span
-            className="badge rounded-pill px-3 py-2"
-            style={{
-              background: 'rgba(250, 204, 21, 0.12)',
-              color: '#facc15',
-              fontSize: '0.8rem',
-            }}
-          >
+          <span className="badge rounded-pill px-3 py-2" style={{ background: 'rgba(250, 204, 21, 0.12)', color: '#facc15', fontSize: '0.8rem' }}>
             {creditList.length} Records
           </span>
         </div>
 
         {/* SEARCH PANEL */}
-        <div
-          className="rounded-3 p-3 p-sm-4 mb-4"
-          style={{
-            background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
-            border: '1px solid rgba(250, 204, 21, 0.15)',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
-          }}
-        >
+        <div className="rounded-3 p-3 p-sm-4 mb-4" style={{ background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)', border: '1px solid rgba(250, 204, 21, 0.15)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)' }}>
           <div className="row g-3 align-items-end">
             <div className="col-12 col-md-8">
-              <DynamicForm
-                fields={fields}
-                formValues={formValues}
-                onChange={onChange}
-              />
+              <DynamicForm fields={fields} formValues={formValues} onChange={onChange} />
             </div>
-
             <div className="col-6 col-md-2">
               <Button text="Search" className="w-100" onClick={handleSearch} />
             </div>
-
             <div className="col-6 col-md-2">
-              <Button
-                text="Show All"
-                className="w-100"
-                onClick={handleClearSearch}
-              />
+              <Button text="Show All" className="w-100" onClick={handleClearSearch} />
             </div>
           </div>
-
           {formValues.search && (
             <div className="mt-3">
-              <span
-                role="button"
-                onClick={handleClearSearch}
-                style={{
-                  fontSize: '0.8rem',
-                  color: '#facc15',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                }}
-              >
+              <span role="button" onClick={handleClearSearch} style={{ fontSize: '0.8rem', color: '#facc15', cursor: 'pointer', textDecoration: 'underline' }}>
                 Clear search
               </span>
             </div>
@@ -320,14 +244,7 @@ const CreditListDetails = () => {
         </div>
 
         {/* TABLE */}
-        <div
-          className="rounded-3 overflow-hidden"
-          style={{
-            background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)',
-            border: '1px solid rgba(250, 204, 21, 0.15)',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
-          }}
-        >
+        <div className="rounded-3 overflow-hidden" style={{ background: 'linear-gradient(160deg, #18181b 0%, #0f0f12 100%)', border: '1px solid rgba(250, 204, 21, 0.15)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)' }}>
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-warning mb-2" role="status" />
@@ -336,12 +253,8 @@ const CreditListDetails = () => {
             <div className="text-center py-5">
               <div style={{ fontSize: '2.5rem' }}>💎</div>
               <div className="text-secondary mt-2">No credit records found</div>
-              <div
-                style={{ fontSize: '0.8rem', color: '#71717a' }}
-                className="mt-1"
-              >
-                Credit entries will appear here after saving a bill with
-                balance
+              <div style={{ fontSize: '0.8rem', color: '#71717a' }} className="mt-1">
+                Credit entries will appear here after saving a bill with balance
               </div>
             </div>
           ) : (

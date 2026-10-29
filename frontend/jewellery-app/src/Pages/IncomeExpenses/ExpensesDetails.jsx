@@ -23,7 +23,7 @@ const ExpensesDetails = () => {
   const fetchExpenses = useCallback(async (searchText = '') => {
     setLoading(true)
     try {
-      // ✅ URL fix
+      //URL fix
       const url = searchText.trim()
         ? `${API_BASE}/search?search=${encodeURIComponent(searchText.trim())}`
         : API_BASE

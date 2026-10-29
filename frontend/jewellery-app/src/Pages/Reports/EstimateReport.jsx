@@ -99,7 +99,7 @@ const EstimateReport = () => {
     );
 
     // =========================
-    // ✅ 100% SAFE RENDER FUNCTION
+    //100% SAFE RENDER FUNCTION
     // =========================
     const safeRender = (val) => {
         if (val === null || val === undefined || val === '') return 'N/A';

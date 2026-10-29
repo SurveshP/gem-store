@@ -15,6 +15,10 @@ import 'react-toastify/dist/ReactToastify.css'
 import CreditListDetails from './Pages/CreditList/CreditListDetails'
 import ExpensesDetails from './Pages/IncomeExpenses/ExpensesDetails'
 import EstimateReport from './Pages/Reports/EstimateReport'
+import StockInOutRegister from './Pages/Stock/StockInOutRegister'
+import StockRegister from './Pages/Stock/StockRegister'
+import StockOutRegisterGold from './Pages/Stock/StockOutRegisterGold'
+import StockOutRegisterSilver from './Pages/Stock/StockOutRegisterSilver'
 
 // 👇 Naya wrapper component (kyunki useLocation Router ke andar hona chahiye)
 const AppContent = () => {
@@ -40,6 +44,10 @@ const AppContent = () => {
           <Route path="/itemPage" element={<ItemsDetails />} />
 
           <Route path="/stockInDetails" element={<StockInDetails />} />
+          <Route path="/stockInOutRegister" element={<StockInOutRegister />} />
+          <Route path="/stockRegister" element={<StockRegister />} />
+          <Route path="/stockOutRegisterGold" element={<StockOutRegisterGold />} />
+          <Route path="/stockOutRegisterSilver" element={<StockOutRegisterSilver />} />
 
           <Route path="/creditList" element={<CreditListDetails />} />
 

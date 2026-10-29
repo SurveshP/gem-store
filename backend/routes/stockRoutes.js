@@ -36,7 +36,7 @@ router.get("/search/data", searchStocks);
 router.post("/", insertStock);
 
 // GET ALL
-router.get("/", getAllStocks);
+router.get("/all", getAllStocks);
 
 // History (must come before /:id)
 router.get("/group-history/:stockId", getStockGroupHistory);

@@ -57,14 +57,14 @@ export const getEstimateReport = (req, res) => {
 
 // ==================== SEARCH ESTIMATE REPORT ====================
 export const searchEstimateReport = (req, res) => {
-    // ✅ Frontend aur Postman dono ke params accept karega
+    //Frontend aur Postman dono ke params accept karega
     const rawDate = req.query.dateFrom || req.query.billDate;
 
     if (!rawDate || !rawDate.trim()) {
         return res.status(400).json({ success: false, message: "Date is required. Pass dateFrom or billDate." });
     }
 
-    // ✅ Date ko DB format mein convert karo
+    //Date ko DB format mein convert karo
     const formattedDate = normalizeDate(rawDate);
     console.log("🔍 Searching for Date:", formattedDate); // Debugging ke liye
 
