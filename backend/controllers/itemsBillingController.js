@@ -283,7 +283,7 @@ const handleStockUpdate = (body, itemsBillingId, callback) => {
                         types: 'Group',
                         tagNo: stock.tagNo,
                         carat: carat || stock.carat,
-                        weight: -billingWeight,       // 👈 negative delta (billing ke wajah se minus)
+                        weight: -billingWeight,       //negative delta (billing ke wajah se minus)
                         previousWeight: currentWeight,
                         newWeight: newWeight,
                         rate: rate || stock.rate,
@@ -488,7 +488,7 @@ const handleStockRestore = (item, callback) => {
                     types: 'Group',
                     tagNo: stock.tagNo,
                     carat: carat || stock.carat,
-                    weight: billingWeight,        // 👈 positive delta (wapas add)
+                    weight: billingWeight,        //positive delta (wapas add)
                     previousWeight: currentWeight,
                     newWeight: newWeight,
                     rate: rate || stock.rate,

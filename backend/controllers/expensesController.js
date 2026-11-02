@@ -68,7 +68,7 @@ export const insertExpense = (req, res) => {
 
         //Estimate table mein clean data insert karo
         const estimateBody = {
-            expenseId: expenseId,              // 👈 Proper Link
+            expenseId: expenseId,              //Proper Link
             billDate: body.date,
             customerName: body.remark || "Expense", // Agar customer nahi hai, toh remark hi name ki tarah dikhe
             accountNo: "N/A",

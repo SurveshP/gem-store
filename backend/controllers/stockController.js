@@ -228,9 +228,9 @@ export const insertStock = (req, res) => {
             types: finalBody.types,
             tagNo: finalBody.tagNo,
             carat: finalBody.carat,
-            weight: 0,                     // 👈 CREATE pe delta = 0
-            previousWeight: 0,             // 👈 pehle kuch nahi tha
-            newWeight: totalWeight,        // 👈 total weight
+            weight: 0,                     //CREATE pe delta = 0
+            previousWeight: 0,             //pehle kuch nahi tha
+            newWeight: totalWeight,        //total weight
             rate: finalBody.rate,
             metalType: finalBody.metalType,
         };

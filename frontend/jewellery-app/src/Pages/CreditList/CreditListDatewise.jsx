@@ -76,7 +76,6 @@ const CreditListDatewise = () => {
 
   // Same columns jo CreditListDetails mein hain
   const columns = [
-    { header: 'ID', accessor: 'id' },
     { header: 'Bill No', accessor: 'billNo' },
     { header: 'Client Name', accessor: 'clientName' },
     { header: 'Account No', accessor: 'accountNo' },

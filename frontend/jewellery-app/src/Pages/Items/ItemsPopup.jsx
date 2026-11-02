@@ -50,7 +50,7 @@ const ItemsPopup = ({ isOpen, onClose, title, initialValues = {} }) => {
 
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },   // 👈 JSON
+        headers: { 'Content-Type': 'application/json' },   //JSON
         body: JSON.stringify(payload),
       })
 

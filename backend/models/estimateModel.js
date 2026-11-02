@@ -2,7 +2,7 @@ import db from "../config/db.js";
 
 const estimateFields = [
     "billingId",
-    "expenseId",    // 👈 NAYA (Expense ko link karne ke liye)
+    "expenseId",    //NAYA (Expense ko link karne ke liye)
     "billNo",
     "billDate",
     "customerName",
@@ -26,7 +26,7 @@ const createEstimateTable = () => {
         CREATE TABLE IF NOT EXISTS estimate (
             id INT PRIMARY KEY AUTO_INCREMENT,
             billingId INT NULL,
-            expenseId INT NULL,                   -- 👈 NAYA
+            expenseId INT NULL,                   --NAYA
             billNo VARCHAR(50),
             billDate VARCHAR(20),
             customerName VARCHAR(255),
@@ -47,7 +47,7 @@ const createEstimateTable = () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_billNo (billNo),
             INDEX idx_billingId (billingId),
-            INDEX idx_expenseId (expenseId)       -- 👈 NAYA
+            INDEX idx_expenseId (expenseId)       --NAYA
         )
     `;
 

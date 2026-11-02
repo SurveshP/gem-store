@@ -8,9 +8,9 @@ const stockGroupFields = [
     "types",
     "tagNo",
     "carat",
-    "weight",            // 👈 sirf itna add hua (delta)
-    "previousWeight",    // 👈 us waqt ka total
-    "newWeight",         // 👈 add ke baad ka total
+    "weight",            //sirf itna add hua (delta)
+    "previousWeight",    //us waqt ka total
+    "newWeight",         //add ke baad ka total
     "rate",
     "metalType",
 ];

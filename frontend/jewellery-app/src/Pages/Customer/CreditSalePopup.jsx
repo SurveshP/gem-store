@@ -23,7 +23,7 @@ const CreditSalePopup = ({
     finalAmount: 0,
     cash: 0,
     oldGold: 0,
-    addition: 0,         // 👈 NAYA
+    addition: 0,         //NAYA
     finalBalance: 0,
     nextDate: '',
   })
@@ -268,7 +268,7 @@ const CreditSalePopup = ({
       finalAmount: formValues.finalAmount,
       cash: formValues.cash,
       oldGold: formValues.oldGold,
-      addition: formValues.addition,       // 👈 Payload mein bhi bheja
+      addition: formValues.addition,       //Payload mein bhi bheja
       nextDate: formatDate(formValues.nextDate),
       mobile: formValues.mobile,
       referredBy: '',

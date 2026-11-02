@@ -7,30 +7,45 @@ import {
     deleteBilling,
     searchBillings,
     getAllEstimates,
-    getAllCreditList,              // 👈 NAYA
-    getCreditListByCustomer,       // 👈 NAYA
+    getAllCreditList,
+    getCreditListByCustomer,
+    getBillingReport, //NAYA
+    getTagwiseReport
 } from "../controllers/billingController.js";
 
 const router = express.Router();
 
-// Special routes (before /:id)
+// ==========================================
+//SPECIAL ROUTES (Hamesha /:id se PEHLE aane chahiye)
+// ==========================================
+
 router.get("/all", getAllBillings);
 router.get("/search/data", searchBillings);
 
-// CREATE
-router.post("/create", insertBilling);
+// GET BILLING REPORT (Type & Date Filter)
+router.get("/report", getBillingReport); //YAHAN HONA CHAHIYE
+
+router.get("/tagwise-report", getTagwiseReport);
 
 // GET ALL ESTIMATE
 router.get("/estimates/all", getAllEstimates);
 
 // GET ALL CREDIT LIST
-router.get("/credit-list/all", getAllCreditList);                  // 👈 NAYA
+router.get("/credit-list/all", getAllCreditList);
 
 // GET CREDIT LIST BY CUSTOMER
-router.get("/credit-list/customer", getCreditListByCustomer);      // 👈 NAYA
+router.get("/credit-list/customer", getCreditListByCustomer);
+
+
+// ==========================================
+//DYNAMIC ROUTES (Hamesha NEECHE aane chahiye)
+// ==========================================
+
+// CREATE
+router.post("/create", insertBilling);
 
 // GET SINGLE
-router.get("/:id", getBillingById);
+router.get("/:id", getBillingById); //YE SABSE LAST MEIN
 
 // DELETE
 router.delete("/:id", deleteBilling);
