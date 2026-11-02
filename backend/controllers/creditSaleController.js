@@ -189,7 +189,7 @@ const updateCreditList = (saleBody, callback) => {
         finalAmount,
         cash,
         oldGold,
-        addition,        // 👈 NAYA
+        addition,        //NAYA
         finalBalance,
     } = saleBody;
 

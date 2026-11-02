@@ -5,7 +5,7 @@ import Button from '../../Components/Bottons/Button'
 import BreadcrumbNav from '../../Layouts/Header/BreadcrumbNav'
 import DynamicTable from '../../Components/Tables/DynamicTable'
 import CustomerDetailsPopup from './CustomerDetailsPopup'
-import CreditSalePopup from './CreditSalePopup'           // 👈 NAYA
+import CreditSalePopup from './CreditSalePopup'           //NAYA
 import { FaEdit, FaTrash, FaMoneyCheckAlt } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 
@@ -16,7 +16,7 @@ const CustomerDetails = () => {
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(false)
   const [isCustomerPopupOpen, setIsCustomerPopupOpen] = useState(false)
-  const [isCreditPopupOpen, setIsCreditPopupOpen] = useState(false)       // 👈 Credit popup
+  const [isCreditPopupOpen, setIsCreditPopupOpen] = useState(false)       //Credit popup
   const [popupTitle, setPopupTitle] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState(null)
 

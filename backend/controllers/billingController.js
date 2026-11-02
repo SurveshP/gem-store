@@ -306,8 +306,8 @@ export const deleteBilling = (req, res) => {
         }
 
         // Estimate + Credit List bhi delete karo
-        db.query(`DELETE FROM estimate WHERE billingId = ?`, [id], () => {});
-        db.query(`DELETE FROM credit_list WHERE billingId = ?`, [id], () => {});
+        db.query(`DELETE FROM estimate WHERE billingId = ?`, [id], () => { });
+        db.query(`DELETE FROM credit_list WHERE billingId = ?`, [id], () => { });
 
         res.status(200).json({
             success: true,
@@ -319,24 +319,23 @@ export const deleteBilling = (req, res) => {
 // ==================== SEARCH BILLINGS ====================
 export const searchBillings = (req, res) => {
     const { search = "" } = req.query;
+    const searchValue = `%${search}%`;
 
+    //Ab sirf accountNo, billNo, aur customerName se search hoga
     const query = `
         SELECT * FROM billing
         WHERE activeStatus = 1
         AND (
             billNo LIKE ?
             OR customerName LIKE ?
-            OR mobile LIKE ?
-            OR billDate LIKE ?
+            OR accountNo LIKE ?
         )
         ORDER BY id DESC
     `;
 
-    const searchValue = `%${search}%`;
-
     db.query(
         query,
-        [searchValue, searchValue, searchValue, searchValue],
+        [searchValue, searchValue, searchValue],
         (err, result) => {
             if (err) {
                 return res.status(500).json({
@@ -349,4 +348,134 @@ export const searchBillings = (req, res) => {
             res.status(200).json({ success: true, data: result });
         }
     );
+};
+
+// ==================== GET BILLING REPORT (Type & Date Range) ====================
+export const getBillingReport = (req, res) => {
+    const { billType = "", dateFrom = "", dateTo = "" } = req.query;
+
+    // Base query
+    let query = `
+        SELECT * FROM billing
+        WHERE activeStatus = 1
+    `;
+    const params = [];
+
+    // Filter by Bill Type (agar select kiya hai)
+    if (billType.trim()) {
+        query += ` AND billType = ?`;
+        params.push(billType.trim());
+    }
+
+    // Filter by Date Range (agar diya hai)
+    if (dateFrom && dateTo) {
+        // Frontend se YYYY-MM-DD aata hai, use convert karna padega agar DB me DD-MM-YYYY hai.
+        // Maan lijiye DB me date 'YYYY-MM-DD' format me hi hai. Agar DD-MM-YYYY hai to convert karein.
+        const convertToDDMMYYYY = (d) => {
+            const parts = d.split('-');
+            return `${parts[2]}-${parts[1]}-${parts[0]}`; // Yahan '-' ya '/' apne DB ke hisaab se rakhein
+        };
+
+        // NOTE: Agar aapke DB me billDate VARCHAR(20) 'YYYY-MM-DD' me hai toh direct bhejenge, 
+        // warna convertToDDMMYYYY(dateFrom) karke bhejenge. Filhal hum YYYY-MM-DD hi bhej rahe hain.
+        query += ` AND billDate BETWEEN ? AND ?`;
+        params.push(dateFrom, dateTo);
+    } else if (dateFrom) {
+        query += ` AND billDate >= ?`;
+        params.push(dateFrom);
+    } else if (dateTo) {
+        query += ` AND billDate <= ?`;
+        params.push(dateTo);
+    }
+
+    query += ` ORDER BY id DESC`;
+
+    db.query(query, params, (err, result) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to fetch billing report",
+                error: err,
+            });
+        }
+
+        res.status(200).json({ success: true, data: result });
+    });
+};
+
+// ==================== GET TAGWISE REPORT (Date Range) ====================
+export const getTagwiseReport = (req, res) => {
+    const { dateFrom = "", dateTo = "" } = req.query;
+
+    if (!dateFrom || !dateTo) {
+        return res.status(400).json({
+            success: false,
+            message: "Both Date From and Date To are required",
+        });
+    }
+
+    // Hum dono format (DD-MM-YYYY aur YYYY-MM-DD) try karenge
+    const convertToYYYYMMDD = (dateStr) => {
+        if (!dateStr) return "";
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            // Input is DD-MM-YYYY
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dateStr;
+    };
+
+    const formattedFrom_DMY = dateFrom;
+    const formattedTo_DMY = dateTo;
+    const formattedFrom_YMD = convertToYYYYMMDD(dateFrom);
+    const formattedTo_YMD = convertToYYYYMMDD(dateTo);
+
+    // ✅ Query mein LEFT JOIN use kiya taaki link miss ho toh bhi items aayen
+    // Aur Date check mein dono formats allow kiye hain
+    const query = `
+        SELECT 
+            b.billDate AS date,
+            b.customerName AS clientName,
+            b.mobile AS mobile,
+            ib.amount AS amount,
+            ib.tagNo AS tagNo,
+            ib.weight AS weight,
+            ib.amount AS rate, 
+            ib.makingAmount AS making,
+            ib.totalAmount AS total
+        FROM items_billing ib
+        LEFT JOIN billing b ON ib.billNo = b.billNo
+        WHERE b.activeStatus = 1 
+        AND (
+            (b.billDate BETWEEN ? AND ?) 
+            OR 
+            (b.billDate BETWEEN ? AND ?)
+        )
+        ORDER BY b.id DESC, ib.id ASC
+    `;
+
+    db.query(query, [formattedFrom_DMY, formattedTo_DMY, formattedFrom_YMD, formattedTo_YMD], (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Database error", error: err });
+        }
+
+        // Agar upar wale logic se data nahi mila, toh ek baar check karein ki data exists karta hai ya nahi
+        if (result.length === 0) {
+            // Fallback query: Bina date filter ke check karo ki items_billing mein data hai ya nahi
+            const checkQuery = `SELECT COUNT(*) as count FROM items_billing`;
+            db.query(checkQuery, (checkErr, checkRes) => {
+                if (!checkErr && checkRes[0].count > 0) {
+                    console.log("Items table has data, but date filter or join failed. Check dates in DB.");
+                }
+            });
+        }
+
+        const totalAmount = result.reduce((sum, row) => sum + (Number(row.total) || 0), 0);
+
+        res.status(200).json({
+            success: true,
+            data: result,
+            summary: { totalRecord: result.length, totalAmount }
+        });
+    });
 };

@@ -88,3 +88,101 @@ export const searchEstimateReport = (req, res) => {
         });
     });
 };
+
+// ==================== GET PAYMENT DATEWISE (Date Range) ====================
+export const getPaymentDatewise = (req, res) => {
+    const { dateFrom = "", dateTo = "" } = req.query;
+
+    if (!dateFrom || !dateTo) {
+        return res.status(400).json({
+            success: false,
+            message: "Both Date From and Date To are required",
+        });
+    }
+
+    // Convert YYYY-MM-DD to DD-MM-YYYY
+    const convertToDDMMYYYY = (dateStr) => {
+        if (!dateStr) return "";
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dateStr;
+    };
+
+    const formattedFrom = convertToDDMMYYYY(dateFrom);
+    const formattedTo = convertToDDMMYYYY(dateTo);
+
+    // Sirf wahi rows laao jahan payment (pay) 0 se badi ho
+    const query = `
+        SELECT * FROM estimate
+        WHERE activeStatus = 1 
+        AND pay > 0 
+        AND billDate BETWEEN ? AND ?
+        ORDER BY id DESC
+    `;
+
+    db.query(query, [formattedFrom, formattedTo], (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Database error", error: err });
+        }
+
+        // Total Cash calculate karo sirf pay ka
+        const totalCash = result.reduce((sum, row) => sum + (Number(row.pay) || 0), 0);
+        
+        res.status(200).json({
+            success: true,
+            data: result,
+            summary: { totalRecord: result.length, totalCash }
+        });
+    });
+};
+
+// ==================== GET CREDIT BALANCE DATEWISE (Date Range) ====================
+export const getCreditBalanceDatewise = (req, res) => {
+    const { dateFrom = "", dateTo = "" } = req.query;
+
+    if (!dateFrom || !dateTo) {
+        return res.status(400).json({
+            success: false,
+            message: "Both Date From and Date To are required",
+        });
+    }
+
+    // Convert YYYY-MM-DD to DD-MM-YYYY
+    const convertToDDMMYYYY = (dateStr) => {
+        if (!dateStr) return "";
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dateStr;
+    };
+
+    const formattedFrom = convertToDDMMYYYY(dateFrom);
+    const formattedTo = convertToDDMMYYYY(dateTo);
+
+    // Sirf wahi rows laao jahan balance 0 se badi ho
+    const query = `
+        SELECT * FROM estimate
+        WHERE activeStatus = 1 
+        AND balance > 0 
+        AND billDate BETWEEN ? AND ?
+        ORDER BY id DESC
+    `;
+
+    db.query(query, [formattedFrom, formattedTo], (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Database error", error: err });
+        }
+
+        // Total Balance calculate karo
+        const totalBalance = result.reduce((sum, row) => sum + (Number(row.balance) || 0), 0);
+        
+        res.status(200).json({
+            success: true,
+            data: result,
+            summary: { totalRecord: result.length, totalBalance }
+        });
+    });
+};

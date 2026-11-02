@@ -6,6 +6,7 @@ import BreadcrumbNav from '../../Layouts/Header/BreadcrumbNav'
 import CardSection from '../Home/CardSection'
 import { useNavigate } from 'react-router-dom'
 import BillingPopup from "./BillingPopup";
+import { toast } from "react-toastify"; //Toastify import kiya
 
 const BillingDetails = () => {
     const [formValues, setFormValues] = useState({})
@@ -24,7 +25,7 @@ const BillingDetails = () => {
         }))
     }
 
-    // 🔹 Popup functions (same as ASPX)
+    // 🔹 Popup functions
     const openBill = (id) => {
         const w = 1200;
         const h = 700;
@@ -52,7 +53,7 @@ const BillingDetails = () => {
     const fields = [
         {
             key: 'search',
-            label: 'Search (Ac No, Date, Name)',
+            label: 'Search (Ac No, Bill No, Name)',
             type: 'text',
         },
     ]
@@ -96,30 +97,75 @@ const BillingDetails = () => {
         }
     ]
 
-    const getBilling = () => {
-        fetch("http://localhost:5000/api/billing/all")
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    setBillingData(data.data);
-                }
-            })
-            .catch((err) => console.log(err));
+    // ================= FETCH BILLING (ALL / SEARCH) =================
+    const getBilling = async (searchQuery = '') => {
+        try {
+            //Agar search text hai to /search/data pe jayega, warna /all
+            const url = searchQuery.trim()
+                ? `http://localhost:5000/api/billing/search/data?search=${encodeURIComponent(searchQuery.trim())}`
+                : `http://localhost:5000/api/billing/all`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.success) {
+                setBillingData(data.data);
+            } else {
+                toast.error(data.message || "Failed to fetch data");
+            }
+        } catch (err) {
+            console.log(err);
+            toast.error("Server Error");
+        }
     };
 
-    const deleteBilling = (id) => {
+    //Search Handler
+    const handleSearch = () => {
+        getBilling(formValues.search || '');
+    }
+
+    //Clear Search
+    const handleClearSearch = () => {
+        setFormValues((prev) => ({ ...prev, search: '' }));
+        getBilling('');
+    }
+
+    // ================= DELETE BILLING =================
+    const deleteBilling = async (id) => {
         if (!window.confirm("Delete this bill ?")) return;
-        fetch(`http://localhost:5000/api/billing/${id}`, {
-            method: "DELETE",
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    alert(data.message);
-                    getBilling();
-                }
-            })
-            .catch((err) => console.log(err));
+        
+        const toastId = toast.loading("Deleting...");
+        try {
+            const res = await fetch(`http://localhost:5000/api/billing/${id}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                toast.update(toastId, {
+                    render: data.message,
+                    type: 'success',
+                    isLoading: false,
+                    autoClose: 2500,
+                });
+                getBilling(formValues.search || '');
+            } else {
+                toast.update(toastId, {
+                    render: data.message || 'Delete failed',
+                    type: 'error',
+                    isLoading: false,
+                    autoClose: 3000,
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            toast.update(toastId, {
+                render: 'Server Error',
+                type: 'error',
+                isLoading: false,
+                autoClose: 3000,
+            });
+        }
     };
 
     return (
@@ -128,8 +174,7 @@ const BillingDetails = () => {
             <CardSection />
 
             <div className="container-fluid px-3 px-sm-4 px-lg-5 py-4">
-
-                {/* ============ PAGE HEADER ============ */}
+                {/* PAGE HEADER */}
                 <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
                     <div className="d-flex align-items-center">
                         <span
@@ -162,7 +207,7 @@ const BillingDetails = () => {
                     </span>
                 </div>
 
-                {/* ============ FILTER SECTION ============ */}
+                {/* FILTER SECTION */}
                 <div
                     className="rounded-3 p-3 p-sm-4 mb-4"
                     style={{
@@ -181,7 +226,8 @@ const BillingDetails = () => {
                         </div>
 
                         <div className="col-6 col-md-2">
-                            <Button text="Search" className="w-100" />
+                            {/*Search Button Updated */}
+                            <Button text="Search" className="w-100" onClick={handleSearch} />
                         </div>
 
                         <div className="col-6 col-md-2">
@@ -193,12 +239,25 @@ const BillingDetails = () => {
                         </div>
                     </div>
 
-                    <p className="small text-secondary mb-0 mt-3">
-                        Filter By [Ac No, Date & Name]
-                    </p>
+                    {formValues.search && (
+                        <div className="mt-3">
+                            <span
+                                role="button"
+                                onClick={handleClearSearch}
+                                style={{
+                                    fontSize: '0.8rem',
+                                    color: '#facc15',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                }}
+                            >
+                                Clear search
+                            </span>
+                        </div>
+                    )}
                 </div>
 
-                {/* ============ TABLE ============ */}
+                {/* TABLE */}
                 <div
                     className="rounded-3 overflow-hidden"
                     style={{
@@ -212,10 +271,12 @@ const BillingDetails = () => {
 
                 <BillingPopup
                     isOpen={isBillingPopupOpen}
-                    onClose={() => setIsBillingPopupOpen(false)}
+                    onClose={() => {
+                        setIsBillingPopupOpen(false);
+                        getBilling(); //Naya bill save hone ke baad data refresh hoga
+                    }}
                     title="Billing Cash / Credit"
                 />
-
             </div>
         </>
     )

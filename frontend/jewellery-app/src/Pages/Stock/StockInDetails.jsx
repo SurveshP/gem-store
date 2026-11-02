@@ -10,7 +10,7 @@ import BreadcrumbNav from '../../Layouts/Header/BreadcrumbNav'
 import DynamicTable from '../../Components/Tables/DynamicTable'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import StockInDetailsPopup from './StockInDetailsPopup'
-import StockInDetailsGroupPopup from './StockInDetailsGroupPopup'   // 👈 NAYA
+import StockInDetailsGroupPopup from './StockInDetailsGroupPopup'   //NAYA
 import { toast } from 'react-toastify'
 
 const API_BASE = 'http://localhost:5000/api/stock'
@@ -22,7 +22,7 @@ const StockInDetails = () => {
 
   // Popup states
   const [isPopupOpen, setIsPopupOpen] = useState(false)              // Individual / Add
-  const [isGroupPopupOpen, setIsGroupPopupOpen] = useState(false)    // 👈 Group edit
+  const [isGroupPopupOpen, setIsGroupPopupOpen] = useState(false)    //Group edit
   const [popupTitle, setPopupTitle] = useState('')
   const [editData, setEditData] = useState(null)
 
@@ -204,7 +204,6 @@ const StockInDetails = () => {
   // TABLE COLUMNS
   // =========================
   const columns = [
-    { header: 'SN', accessor: 'id' },
     { header: 'Bill No', accessor: 'billNo' },
     {
       header: 'Stock Date',

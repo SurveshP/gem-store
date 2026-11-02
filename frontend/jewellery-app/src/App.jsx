@@ -20,6 +20,11 @@ import StockRegister from './Pages/Stock/StockRegister'
 import StockOutRegisterGold from './Pages/Stock/StockOutRegisterGold'
 import StockOutRegisterSilver from './Pages/Stock/StockOutRegisterSilver'
 import CreditListDatewise from './Pages/CreditList/CreditListDatewise'
+import PaymentDatewise from './Pages/Reports/PaymentDatewise'
+import CreditBalanceDatewise from './Pages/Reports/CreditBalanceDatewise'
+import BillingReports from './Pages/Bill/BillingReports'
+import TagwiseReport from './Pages/Bill/TagwiseReport'
+import CreditList25K from './Pages/CreditList/CreditList25K'
 
 // 👇 Naya wrapper component (kyunki useLocation Router ke andar hona chahiye)
 const AppContent = () => {
@@ -52,13 +57,18 @@ const AppContent = () => {
 
           <Route path="/creditList" element={<CreditListDetails />} />
           <Route path="/creditListDatewise" element={<CreditListDatewise />} />
+          <Route path="/creditList25K" element={<CreditList25K />} />
 
           <Route path="/billing" element={<BillingDetails />} />
           <Route path="/billPrint/:id" element={<BillPrint />} />
+          <Route path="/billingReports" element={<BillingReports />} />
+          <Route path="/tagwiseReport" element={<TagwiseReport />} />
 
           <Route path="/income-expenses" element={<ExpensesDetails />} />
 
           <Route path="/estimateReport" element={<EstimateReport />} />
+          <Route path="/paymentDatewise" element={<PaymentDatewise />} />
+          <Route path="/creditBalanceDatewise" element={<CreditBalanceDatewise />} />
         </Routes>
       </main>
 
