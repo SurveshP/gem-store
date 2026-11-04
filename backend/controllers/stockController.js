@@ -668,3 +668,52 @@ export const getStockGroupHistory = (req, res) => {
         res.status(200).json({ success: true, data: result });
     });
 };
+
+// ==================== GET CARATWISE REPORT (Date Range) ====================
+export const getCaratwiseReport = (req, res) => {
+    // Frontend se ab DD-MM-YYYY format mein aayega
+    const { dateFrom = "", dateTo = "" } = req.query;
+
+    if (!dateFrom || !dateTo) {
+        return res.status(400).json({
+            success: false,
+            message: "Both Date From and Date To are required",
+        });
+    }
+
+    // ✅ Helper: DD-MM-YYYY to YYYY-MM-DD (Database ke liye)
+    const convertToYMD = (dateStr) => {
+        if (!dateStr) return "";
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dateStr;
+    };
+
+    const dbDateFrom = convertToYMD(dateFrom);
+    const dbDateTo = convertToYMD(dateTo);
+
+    const query = `
+        SELECT 
+            DATE_FORMAT(stockBillDate, '%d/%m/%Y') AS stockDate,
+            item AS description,
+            tagNo,
+            carat
+        FROM stocks
+        WHERE activeStatus = 1
+        AND stockBillDate BETWEEN ? AND ?
+        ORDER BY id DESC
+    `;
+
+    db.query(query, [dbDateFrom, dbDateTo], (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Database error", error: err });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: result
+        });
+    });
+};
