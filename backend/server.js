@@ -25,6 +25,7 @@ import creditPaymentRoutes from "./routes/creditPaymentRoutes.js";
 import expensesRoutes from "./routes/expensesRoutes.js";  
 import estimateReportRoutes from "./routes/estimateReportRoutes.js";
 import stockRegisterRoutes from "./routes/stockRegisterRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/expenses", expensesRoutes);
 app.use("/api/estimateReport", estimateReportRoutes); 
 app.use("/api/stockRegister", stockRegisterRoutes);
 app.use("/api/creditList", creditListRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
     res.send("Jewellery Backend Running");

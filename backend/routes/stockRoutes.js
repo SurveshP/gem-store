@@ -12,6 +12,7 @@ import {
     getNextBillNo,
     getLastTag,
     getStockGroupHistory,
+    getCaratwiseReport // 👈 NAYA IMPORT
 } from "../controllers/stockController.js";
 
 const router = express.Router();
@@ -30,6 +31,13 @@ router.get("/active/all", getActiveStocks);
 // Search
 router.get("/search/data", searchStocks);
 
+// ✅ YAHAN RAKHEIN (/:id se pehle)
+router.get("/caratwise-report", getCaratwiseReport);
+
+// History (must come before /:id)
+router.get("/group-history/:stockId", getStockGroupHistory);
+
+
 // ============ CRUD ============
 
 // CREATE
@@ -38,11 +46,8 @@ router.post("/", insertStock);
 // GET ALL
 router.get("/all", getAllStocks);
 
-// History (must come before /:id)
-router.get("/group-history/:stockId", getStockGroupHistory);
-
-// GET SINGLE (last mein rakhna zaroori hai)
-router.get("/:id", getStockById);
+// GET SINGLE (Yeh sabse last mein hona chahiye)
+router.get("/:id", getStockById); 
 
 // UPDATE FULL
 router.put("/:id", updateStock);

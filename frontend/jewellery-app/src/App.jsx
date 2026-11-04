@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from './Layouts/Header/Navbar'
 import Home from './Pages/Home/Home'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import Dashboard from './Pages/Home/Dashboard'
 import CustomerDetails from './Pages/Customer/CustomerDetails'
 import ItemsDetails from './Pages/Items/ItemsDetails'
@@ -25,55 +25,91 @@ import CreditBalanceDatewise from './Pages/Reports/CreditBalanceDatewise'
 import BillingReports from './Pages/Bill/BillingReports'
 import TagwiseReport from './Pages/Bill/TagwiseReport'
 import CreditList25K from './Pages/CreditList/CreditList25K'
+import CreditListZeroBalance from './Pages/CreditList/CreditListZeroBalance'
+import CaratwiseReport from './Pages/Stock/CaratwiseReport'
 
-// 👇 Naya wrapper component (kyunki useLocation Router ke andar hona chahiye)
+// 👈 NAYA: Login Page import karein
+// import Login from './Pages/Auth/Login' 
+import Login from './Pages/Login/Login'
+
+// 👇 Naya wrapper component
 const AppContent = () => {
   const location = useLocation()
 
+  // 👈 NAYA: Login State
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  // Page load hone par check karo ki user logged in hai ya nahi
+  useEffect(() => {
+    const auth = localStorage.getItem('isLoggedIn')
+    if (auth === 'true') {
+      setIsLoggedIn(true)
+    }
+  }, [])
+
   // Print page pe navbar/footer hide karo
   const isPrintPage = location.pathname.startsWith('/billPrint')
+  const isLoginPage = location.pathname.startsWith('/login')
 
   return (
     <div
       className="d-flex flex-column min-vh-100"
       style={{ background: '#09090b', color: '#f4f4f5' }}
     >
-      {/* Navbar — sirf non-print pages pe */}
-      {!isPrintPage && <Navbar />}
+      {/* Navbar — print page aur login page ko chhod kar sab jagah dikhega */}
+      {!isPrintPage && !isLoginPage && (
+        <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      )}
 
       <main className="flex-grow-1">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/customerDetails" element={<CustomerDetails />} />
+          {/* ✅ LOGIN ROUTE */}
+          <Route
+            path="/login"
+            element={
+              isLoggedIn ? <Navigate to="/dashboard" /> : <Login setIsLoggedIn={setIsLoggedIn} />
+            }
+          />
 
-          <Route path="/itemPage" element={<ItemsDetails />} />
+          {/* ✅ PROTECTED ROUTES (Login zaroori hai) */}
+          <Route path="/" element={isLoggedIn ? <Home /> : <Navigate to="/login" />} />
+          <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/customerDetails" element={isLoggedIn ? <CustomerDetails /> : <Navigate to="/login" />} />
 
-          <Route path="/stockInDetails" element={<StockInDetails />} />
-          <Route path="/stockInOutRegister" element={<StockInOutRegister />} />
-          <Route path="/stockRegister" element={<StockRegister />} />
-          <Route path="/stockOutRegisterGold" element={<StockOutRegisterGold />} />
-          <Route path="/stockOutRegisterSilver" element={<StockOutRegisterSilver />} />
+          <Route path="/itemPage" element={isLoggedIn ? <ItemsDetails /> : <Navigate to="/login" />} />
 
-          <Route path="/creditList" element={<CreditListDetails />} />
-          <Route path="/creditListDatewise" element={<CreditListDatewise />} />
-          <Route path="/creditList25K" element={<CreditList25K />} />
+          <Route path="/stockInDetails" element={isLoggedIn ? <StockInDetails /> : <Navigate to="/login" />} />
+          <Route path="/stockInOutRegister" element={isLoggedIn ? <StockInOutRegister /> : <Navigate to="/login" />} />
+          <Route path="/stockRegister" element={isLoggedIn ? <StockRegister /> : <Navigate to="/login" />} />
+          <Route path="/stockOutRegisterGold" element={isLoggedIn ? <StockOutRegisterGold /> : <Navigate to="/login" />} />
+          <Route path="/stockOutRegisterSilver" element={isLoggedIn ? <StockOutRegisterSilver /> : <Navigate to="/login" />} />
+          <Route path="/caratwiseReport" element={isLoggedIn ? <CaratwiseReport /> : <Navigate to="/login" />} />
 
-          <Route path="/billing" element={<BillingDetails />} />
+          <Route path="/creditList" element={isLoggedIn ? <CreditListDetails /> : <Navigate to="/login" />} />
+          <Route path="/creditListDatewise" element={isLoggedIn ? <CreditListDatewise /> : <Navigate to="/login" />} />
+          <Route path="/creditList25K" element={isLoggedIn ? <CreditList25K /> : <Navigate to="/login" />} />
+          <Route path="/creditListZeroBalance" element={isLoggedIn ? <CreditListZeroBalance /> : <Navigate to="/login" />} />
+
+          <Route path="/billing" element={isLoggedIn ? <BillingDetails /> : <Navigate to="/login" />} />
+          {/* BillPrint public hai taaki print hamesha khul sake */}
           <Route path="/billPrint/:id" element={<BillPrint />} />
-          <Route path="/billingReports" element={<BillingReports />} />
-          <Route path="/tagwiseReport" element={<TagwiseReport />} />
 
-          <Route path="/income-expenses" element={<ExpensesDetails />} />
+          <Route path="/billingReports" element={isLoggedIn ? <BillingReports /> : <Navigate to="/login" />} />
+          <Route path="/tagwiseReport" element={isLoggedIn ? <TagwiseReport /> : <Navigate to="/login" />} />
 
-          <Route path="/estimateReport" element={<EstimateReport />} />
-          <Route path="/paymentDatewise" element={<PaymentDatewise />} />
-          <Route path="/creditBalanceDatewise" element={<CreditBalanceDatewise />} />
+          <Route path="/income-expenses" element={isLoggedIn ? <ExpensesDetails /> : <Navigate to="/login" />} />
+
+          <Route path="/estimateReport" element={isLoggedIn ? <EstimateReport /> : <Navigate to="/login" />} />
+          <Route path="/paymentDatewise" element={isLoggedIn ? <PaymentDatewise /> : <Navigate to="/login" />} />
+          <Route path="/creditBalanceDatewise" element={isLoggedIn ? <CreditBalanceDatewise /> : <Navigate to="/login" />} />
+
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
 
-      {/* Footer — sirf non-print pages pe */}
-      {!isPrintPage && (
+      {/* Footer — sirf non-print aur non-login pages pe */}
+      {!isPrintPage && !isLoginPage && (
         <footer
           className="text-center py-3"
           style={{
